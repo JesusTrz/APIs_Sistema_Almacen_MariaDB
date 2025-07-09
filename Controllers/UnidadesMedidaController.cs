@@ -55,5 +55,61 @@ namespace Sistema_Almacen_MariaDB.Controllers
             }
         }
         #endregion
+
+        #region Agregar Unidad de Medida
+        [HttpPost]
+        [Route("api/create/unidad_medida")]
+
+        public IHttpActionResult AgregarUnidadMedida(UnidadesMedidaNombre medida)
+        {
+            if (medida == null || string.IsNullOrWhiteSpace(medida.Nombre_Unidad))
+                return BadRequest("");
+            try
+            {
+                _unidadesMedidaService.AgregarUnidadMedida(medida);
+                return Ok("Unidad de Medida Agregada correctamente!");
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+        #endregion
+
+        #region Editar Unidad de Medida
+        [HttpPut]
+        [Route("api/unidades-medida/{id}")]
+
+        public IHttpActionResult EditarUnidadMedida(int id, string nuevoNombre)
+        {
+            try
+            {
+                _unidadesMedidaService.EditarUnidadMedida(id, nuevoNombre);
+                return Ok("Unidad de medida actualizada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region Eliminar Unidad de Medida
+        [HttpDelete]
+        [Route("api/unidades-medida/{id}")]
+        public IHttpActionResult EliminarUnidad(int id)
+        {
+            try
+            {
+                _unidadesMedidaService.EliminarUnidadMedida(id);
+                return Ok("Unidad de medida eliminada. Los artículos afectados ahora usan 'Desconocido'.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        #endregion
     }
 }
