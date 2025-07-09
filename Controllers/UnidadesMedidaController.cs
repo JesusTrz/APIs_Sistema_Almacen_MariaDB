@@ -63,7 +63,7 @@ namespace Sistema_Almacen_MariaDB.Controllers
         public IHttpActionResult AgregarUnidadMedida(UnidadesMedidaNombre medida)
         {
             if (medida == null || string.IsNullOrWhiteSpace(medida.Nombre_Unidad))
-                return BadRequest("");
+                return BadRequest("El Nombre no debe ser Nulo");
             try
             {
                 _unidadesMedidaService.AgregarUnidadMedida(medida);
