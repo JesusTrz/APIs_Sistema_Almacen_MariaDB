@@ -58,10 +58,10 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         #region Agregar Linea
         [HttpPost]
-        [Route("api/linea/cuenta")]
+        [Route("api/linea/add")]
         public IHttpActionResult AgregarLinea(LineaDatos linea)
         {
-            if (linea == null || string.IsNullOrWhiteSpace(linea.Nombre_Linea) && string.IsNullOrWhiteSpace(linea.Descripcion_Linea))
+            if (linea == null || string.IsNullOrWhiteSpace(linea.Nombre_Linea) || string.IsNullOrWhiteSpace(linea.Descripcion_Linea))
                 return BadRequest("El Nombre y Descripcion no pueden ser Nulos.");
             try
             {
@@ -91,6 +91,25 @@ namespace Sistema_Almacen_MariaDB.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
+
+        #region Eliminar Linea
+
+        [HttpDelete]
+        [Route("api/linea/{id}")]
+        public IHttpActionResult EliminarCuenta(int id)
+        {
+            try
+            {
+                _lineaService.EliminarCuenta(id);
+                return Ok("Linea eliminada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         #endregion
     }
 }

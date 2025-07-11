@@ -11,6 +11,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     {
         void AgregarLinea(LineaDatos linea);
         void EditarLinea(int id, LineaDatos linea);
+        void EliminarCuenta(int id);
         List<LineaDto> GetAllLineas();
         List<LineaDto> GetLineasById(int id);
     }

@@ -105,5 +105,30 @@ namespace Sistema_Almacen_MariaDB.Service
             }
         }
         #endregion
+
+        #region Eliminar Linea
+        public void EliminarCuenta(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var enUso = connection.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM Articulo WHERE ID_Linea = @ID_Linea",
+                    new { ID_Linea = id });
+
+                if(enUso > 0)
+                    throw new Exception("No se puede eliminar la linea porque está en uso.");
+
+                var existe = connection.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM Linea WHERE ID_Linea = @ID_Linea",
+                    new { ID_Linea = id });
+
+                if(existe == 0)
+                    throw new Exception("La cuenta no existe.");
+
+                string query = "DELETE FROM Linea WHERE ID_Linea = @ID_Linea";
+                connection.Execute(query, new { ID_Linea = id });
+            }
+        }
+        #endregion
     }
 }

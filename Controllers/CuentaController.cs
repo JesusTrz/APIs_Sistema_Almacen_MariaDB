@@ -61,7 +61,7 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         public IHttpActionResult AgregarCuenta(DatosCuenta cuenta)
         {
-            if (cuenta == null || string.IsNullOrWhiteSpace(cuenta.Nombre_Cuenta) && string.IsNullOrEmpty(cuenta.Cuenta_Entrada) && string.IsNullOrEmpty(cuenta.Cuenta_Salida))
+            if (cuenta == null || string.IsNullOrWhiteSpace(cuenta.Nombre_Cuenta) || string.IsNullOrEmpty(cuenta.Cuenta_Entrada) || string.IsNullOrEmpty(cuenta.Cuenta_Salida))
                 return BadRequest("El Nombre y las Cuentas de Entrada y Salida no pueden ser Nulos.");
             try
             {

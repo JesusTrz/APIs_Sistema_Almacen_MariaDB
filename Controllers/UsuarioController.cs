@@ -63,7 +63,7 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         public IHttpActionResult CrearUsuarios(UsuariosDatos users)
         {
-            if (users == null || string.IsNullOrWhiteSpace(users.Nombre_Usuario) && string.IsNullOrWhiteSpace(users.Contrasenia))
+            if (users == null || string.IsNullOrWhiteSpace(users.Nombre_Usuario) || string.IsNullOrWhiteSpace(users.Contrasenia))
                 return BadRequest("El Nombre de Usuario y Contraseña es Obligatorio.");
 
             try
