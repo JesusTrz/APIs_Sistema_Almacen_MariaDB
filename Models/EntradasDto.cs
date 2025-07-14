@@ -45,4 +45,7 @@ namespace Sistema_Almacen_MariaDB.Models
         public decimal? Precio_Unitario { get; set; }
         public decimal? Total { get; set; }
     }
+
+    
+
 }

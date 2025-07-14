@@ -23,8 +23,6 @@ namespace Sistema_Almacen_MariaDB.Models
 
     public class InventarioDatos
     {
-        public Nullable<int> ID_Sede { get; set; }
-        public Nullable<int> ID_Articulo { get; set; }
         public Nullable<int> Stock_Actual { get; set; }
         public Nullable<int> Stock_Minimo { get; set; }
         public Nullable<int> Stock_Maximo { get; set; }
