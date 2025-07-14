@@ -64,8 +64,8 @@ namespace Sistema_Almacen_MariaDB.Controllers
             {
                 bool actualizar = _entradaService.ActualizarEntradasyDetalles(idEntrada, dto);
                 if (!actualizar)
-                    return BadRequest("");
-                return Ok("");
+                    return BadRequest("Error al Actualizar entrada.");
+                return Ok("Entrada actualizada con exito!");
             }
             catch (Exception ex)
             {
