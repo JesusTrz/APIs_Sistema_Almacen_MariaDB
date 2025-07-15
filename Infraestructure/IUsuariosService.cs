@@ -10,7 +10,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     public interface IUsuariosService
     {
         void CambiarContrasenia(int idUsuario, string ViejaContrasenia, string NuevaContrasenia);
-        void CrearUsuarios(UsuariosDatos users);
+        void CrearUsuarios(UsuariosDatos users, int idUsuarioActual);
         List<UsuariosDto> GetAllUsuarios();
         List<UsuariosDto> GetUsuarioBySedeId(int idSede);
         LoginUser LoginUsuarios(string nombreUsuario, string contrasenia, int idSede);

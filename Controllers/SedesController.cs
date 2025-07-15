@@ -60,14 +60,14 @@ namespace Sistema_Almacen_MariaDB.Controllers
         [HttpPost]
         [Route("api/create/sedes")]
 
-        public IHttpActionResult CrearSede(NombreSedeDto sede)
+        public IHttpActionResult CrearSede(NombreSedeDto sede, int idUsuarioActual)
         {
             if (sede == null || string.IsNullOrWhiteSpace(sede.Nombre_Sede))
                 return BadRequest("El Nombre de la Sede es Obligatorio.");
 
             try
             {
-                _sedesService.CrearSede(sede);
+                _sedesService.CrearSede(sede, idUsuarioActual);
                 return Ok("Sede Creada con Exito!");
             }
             catch (Exception ex)

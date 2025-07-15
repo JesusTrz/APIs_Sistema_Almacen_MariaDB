@@ -43,15 +43,38 @@ namespace Sistema_Almacen_MariaDB.Service
         #endregion
 
         #region Crear Sedes
-        public void CrearSede(NombreSedeDto sede)
+        public void CrearSede(NombreSedeDto sede, int idUsuarioActual)
         {
+            if(!UsuarioEsAdministrador(idUsuarioActual))
+                throw new Exception("No tiene permisos para crear nuevas Sedes.");
+
             using (var connection = new MySqlConnection(_connectionString))
             {
                 string query = "INSERT INTO Sedes (Nombre_Sede) VALUES (@Nombre_Sede)";
                 connection.Execute(query, new { Nombre_Sede = sede.Nombre_Sede });
             }
-        } 
+        }
         #endregion
+
+        /////////////////////////////////////////////
+
+        #region Validar si usuario es Administrador
+        private bool UsuarioEsAdministrador(int idUsuario)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string sql = @"SELECT r.Nombre_Rol
+                               FROM Usuarios u
+                               JOIN Roles r ON u.ID_Roles = r.ID_Roles
+                               WHERE u.ID_Usuario = @ID_Usuario";
+
+                var rol = connection.QueryFirstOrDefault<string>(sql, new { ID_Usuario = idUsuario });
+                return rol == "Administrador";
+            }
+        }
+        #endregion
+
+
 
     }
 }

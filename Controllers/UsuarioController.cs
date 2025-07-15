@@ -61,14 +61,15 @@ namespace Sistema_Almacen_MariaDB.Controllers
         [HttpPost]
         [Route("api/crate/users")]
 
-        public IHttpActionResult CrearUsuarios(UsuariosDatos users)
+        public IHttpActionResult CrearUsuarios(UsuariosDatos users, int idUsuarioActual)
         {
+
             if (users == null || string.IsNullOrWhiteSpace(users.Nombre_Usuario) || string.IsNullOrWhiteSpace(users.Contrasenia))
                 return BadRequest("El Nombre de Usuario y Contraseña es Obligatorio.");
 
             try
             {
-                _usuariosService.CrearUsuarios(users);
+                _usuariosService.CrearUsuarios(users, idUsuarioActual);
                 return Ok("Usuario Creado Correctamente");
             }
             catch (Exception ex)

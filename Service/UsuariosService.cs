@@ -48,9 +48,12 @@ namespace Sistema_Almacen_MariaDB.Service
         #endregion
 
         #region Crear Usuarios
-        public void CrearUsuarios(UsuariosDatos users)
+        public void CrearUsuarios(UsuariosDatos users, int idUsuarioActual)
         {
-            if(!ContraseniaValida(users.Contrasenia))
+            if(!UsuarioEsAdministrador(idUsuarioActual))
+                throw new Exception("No tiene permisos para crear usuarios");
+
+            if (!ContraseniaValida(users.Contrasenia))
                 throw new Exception("La contraseña no cumple con los requisitos mínimos.");
 
             if(!RolExiste(users.ID_Roles))
@@ -179,6 +182,24 @@ namespace Sistema_Almacen_MariaDB.Service
             }
         }
 
+        #endregion
+
+        /////////////////////////////////////////////////////
+
+        #region Validar si usuario es Administrador
+        private bool UsuarioEsAdministrador(int idUsuario)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string sql = @"SELECT r.Nombre_Rol
+                               FROM Usuarios u
+                               JOIN Roles r ON u.ID_Roles = r.ID_Roles
+                               WHERE u.ID_Usuario = @ID_Usuario";
+
+                var rol = connection.QueryFirstOrDefault<string>(sql, new { ID_Usuario = idUsuario });
+                return rol == "Administrador";
+            }
+        }
         #endregion
     }
 }
