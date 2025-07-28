@@ -87,9 +87,12 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         public IHttpActionResult Login(LoginUser login)
         {
+            if (login == null || string.IsNullOrWhiteSpace(login.Nombre_Usuario) || string.IsNullOrWhiteSpace(login.Contrasenia))
+                return BadRequest("Usuario y contraseña obligatorios.");
+
             try
             {
-                var usuario = _usuariosService.LoginUsuarios(login.Nombre_Usuario, login.Contrasenia, login.ID_Sede);
+                var usuario = _usuariosService.LoginUsuarios(login.Nombre_Usuario, login.Contrasenia);
                 return Ok(usuario);
             }
             catch (Exception ex)

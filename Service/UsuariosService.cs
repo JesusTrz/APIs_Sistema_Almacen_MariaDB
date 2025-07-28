@@ -108,33 +108,41 @@ namespace Sistema_Almacen_MariaDB.Service
         #endregion
 
         #region Login
-        public LoginUser LoginUsuarios(string nombreUsuario, string contrasenia, int idSede)
+        public UsuariosDto LoginUsuarios(string nombreUsuario, string contrasenia)
         {
-            using(var connection = new MySqlConnection(_connectionString))
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = @"SELECT ID_Usuario, Nombre_Usuario, Contrasenia, ID_Roles, ID_Sede
-                                 FROM Usuarios
-                                 WHERE Nombre_Usuario = @Nombre_Usuario AND ID_Sede = @ID_Sede";
+                string query = @"
+            SELECT 
+                u.ID_Usuario, 
+                u.Nombre_Usuario, 
+                u.Contrasenia, 
+                u.ID_Roles, 
+                u.ID_Sede,
+                r.Nombre_Rol AS NombreRol
+            FROM Usuarios u
+            JOIN Roles r ON u.ID_Roles = r.ID_Roles
+            WHERE u.Nombre_Usuario = @Nombre_Usuario";
 
-                var usuario = connection.QueryFirstOrDefault<LoginUser>(query, new
+                var usuario = connection.QueryFirstOrDefault<UsuariosDto>(query, new
                 {
-                    Nombre_Usuario = nombreUsuario,
-                    ID_Sede = idSede
+                    Nombre_Usuario = nombreUsuario
                 });
 
-                if(usuario == null)
-                    throw new Exception("Usuario no encontrado en la sede especificada.");
+                if (usuario == null)
+                    throw new Exception("Usuario no encontrado.");
 
                 string hashIngresado = HashPassword(contrasenia);
 
-                if(!usuario.Contrasenia.Equals(hashIngresado, StringComparison.OrdinalIgnoreCase))
+                if (!usuario.Contrasenia.Equals(hashIngresado, StringComparison.OrdinalIgnoreCase))
                     throw new Exception("Contraseña incorrecta.");
 
-                usuario.Contrasenia = null;
+                usuario.Contrasenia = null; // nunca devolver la contraseña
 
                 return usuario;
             }
         }
+
         #endregion
 
         #region Metodo para Encriptar Contraseña y Validar Contraseña

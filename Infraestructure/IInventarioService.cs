@@ -12,7 +12,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     {
         bool ActualizarStockArticulo(StockEntrada entrada);
         void AgregarArticuloaInventario(AgregarArticuloaInventario invArt);
-        void EditarArticuloInventario(int idInv, InventarioDatos inventario);
+        void EditarArticuloInventario(int idInv, AgregarArticuloaInventario invArt);
         List<InventarioArticulos> GetInventarioPorSede(int idSede);
         List<ExpandoObject> ObtenerInventarioFiltrado(InventarioFiltro filtros);
     }

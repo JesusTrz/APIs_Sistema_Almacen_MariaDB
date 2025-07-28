@@ -13,6 +13,6 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
         void CrearUsuarios(UsuariosDatos users, int idUsuarioActual);
         List<UsuariosDto> GetAllUsuarios();
         List<UsuariosDto> GetUsuarioBySedeId(int idSede);
-        LoginUser LoginUsuarios(string nombreUsuario, string contrasenia, int idSede);
+        UsuariosDto LoginUsuarios(string nombreUsuario, string contrasenia);
     }
 }

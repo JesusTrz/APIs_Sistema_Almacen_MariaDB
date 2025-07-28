@@ -26,31 +26,65 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                if(invArt.ID_Sede <= 0)
-                    throw new Exception("Debe seleccionar una sede válida.");
+                if (invArt.ID_Sede <= 0 || invArt.ID_Articulo <= 0)
+                    throw new Exception("Debe seleccionar una sede y un artículo válidos.");
 
                 var sedeExistente = connection.ExecuteScalar<int>(
-                    "SELECT COUNT(*) FROM Sedes WHERE ID_Sede = @ID_Sede", 
-                    new { invArt.ID_Sede});
-                if(sedeExistente == 0)
+                    "SELECT COUNT(*) FROM Sedes WHERE ID_Sede = @ID_Sede",
+                    new { invArt.ID_Sede });
+
+                if (sedeExistente == 0)
                     throw new Exception("La sede especificada no existe.");
 
                 var articuloExistente = connection.ExecuteScalar<int>(
-                    "SELECT COUNT(*) FROM Articulo WHERE ID_Articulo = @ID_Articulo", 
+                    "SELECT COUNT(*) FROM Articulo WHERE ID_Articulo = @ID_Articulo",
                     new { invArt.ID_Articulo });
-                if(articuloExistente == 0)
-                    throw new Exception("El Articulo ingresado no existe.");
 
-                var articuloInvExistente = connection.ExecuteScalar<int>(
-                    "SELECT COUNT(*) FROM Inventario WHERE ID_Articulo = @ID_Articulo", 
-                    new { invArt.ID_Articulo });
-                if(articuloExistente == 0)
-                    throw new Exception("El Articulo ingresado ya existe en este Inventario!");
+                if (articuloExistente == 0)
+                    throw new Exception("El artículo ingresado no existe.");
 
-                string query = "INSERT INTO Inventario (ID_Articulo, ID_Sede) Values (@ID_Articulo, @ID_Sede)";
-                connection.Execute(query, invArt);
+                var yaExiste = connection.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM Inventario WHERE ID_Sede = @ID_Sede AND ID_Articulo = @ID_Articulo",
+                    new { invArt.ID_Sede, invArt.ID_Articulo });
+
+                if (yaExiste > 0)
+                    throw new Exception("El artículo ya existe en el inventario de esta sede.");
+
+                // Validar y sanitizar ubicación
+                string ubicacion = string.IsNullOrWhiteSpace(invArt.Ubicacion)
+                    ? "S/U"
+                    : invArt.Ubicacion.Trim();
+
+                if (!Regex.IsMatch(ubicacion, @"^[a-zA-Z0-9\s\-/]+$"))
+                    throw new Exception("La ubicación solo debe contener letras, números y guiones.");
+
+                // Valores por defecto
+                int stock = invArt.Stock_Actual ?? 0;
+                decimal costoPromedio = invArt.Costo_Promedio ?? 0;
+                decimal saldo = stock * costoPromedio;
+
+                string query = @"
+                    INSERT INTO Inventario 
+                        (ID_Sede, ID_Articulo, Stock_Actual, Stock_Minimo, Stock_Maximo, Ubicacion, Costo_Promedio, Saldo, Ultimo_Costo, Ultima_Compra)
+                    VALUES
+                        (@ID_Sede, @ID_Articulo, @Stock_Actual, @Stock_Minimo, @Stock_Maximo, @Ubicacion, @Costo_Promedio, @Saldo, @Ultimo_Costo, @Ultima_Compra)";
+
+                connection.Execute(query, new
+                {
+                    invArt.ID_Sede,
+                    invArt.ID_Articulo,
+                    Stock_Actual = stock,
+                    Stock_Minimo = invArt.Stock_Minimo ?? 0,
+                    Stock_Maximo = invArt.Stock_Maximo ?? 0,
+                    Ubicacion = ubicacion,
+                    Costo_Promedio = costoPromedio,
+                    Saldo = saldo,
+                    Ultimo_Costo = invArt.Ultimo_Costo ?? 0,
+                    Ultima_Compra = invArt.Ultima_Compra ?? DateTime.Now
+                });
             }
         }
+
         #endregion
 
         #region Obtener articulos de inventario a sede
@@ -91,58 +125,57 @@ namespace Sistema_Almacen_MariaDB.Service
         #endregion
 
         #region Editar Inventario
-        public void EditarArticuloInventario(int idInv, InventarioDatos inventario)
+        public void EditarArticuloInventario(int idInv, AgregarArticuloaInventario invArt)
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                var inventarioActual = connection.QueryFirstOrDefault<InventarioDatos>(
-                         "SELECT ID_Inventario, ID_Sede, ID_Articulo, Stock_Actual, Stock_Minimo, Stock_Maximo, Ubicacion, Costo_Promedio, Saldo, Ultimo_Costo, Ultima_Compra FROM Inventario WHERE ID_Inventario = @ID_Inventario",
-                         new { ID_Inventario = idInv });
+                var inventarioActual = connection.QueryFirstOrDefault<AgregarArticuloaInventario>(
+                    "SELECT * FROM Inventario WHERE ID_Inventario = @ID_Inventario",
+                    new { ID_Inventario = idInv });
 
                 if (inventarioActual == null)
                     throw new Exception("El inventario no existe.");
 
-                string ubicacion = string.IsNullOrWhiteSpace(inventario.Ubicacion)
-                    ? "Sin Ubicación"
-                    : inventario.Ubicacion.Trim();
+                // Validar y sanitizar ubicación
+                string ubicacion = string.IsNullOrWhiteSpace(invArt.Ubicacion)
+                    ? "S/U"
+                    : invArt.Ubicacion.Trim();
 
-                if(!System.Text.RegularExpressions.Regex.IsMatch(ubicacion, @"^[a-zA-Z0-9-]+$"))
-                  throw new Exception("La Ubicación solo debe contener letras y números.");
+                if (!Regex.IsMatch(ubicacion, @"^[a-zA-Z0-9\s\-/]+$"))
+                    throw new Exception("La ubicación solo debe contener letras, números y guiones.");
 
-                #region Calcular Saldo
-                decimal costoPromedio = inventario.Costo_Promedio ?? inventarioActual.Costo_Promedio ?? 0;
-                int stockActual = inventario.Stock_Actual ?? inventarioActual.Stock_Actual ?? 0;
-                decimal saldo = costoPromedio * stockActual;
-                #endregion
+                // Calcular valores
+                int stock = invArt.Stock_Actual ?? inventarioActual.Stock_Actual ?? 0;
+                decimal costoPromedio = invArt.Costo_Promedio ?? inventarioActual.Costo_Promedio ?? 0;
+                decimal saldo = stock * costoPromedio;
 
                 string query = @"
-                    UPDATE Inventario SET 
-                        Stock_Actual = @Stock_Actual,
-                        Stock_Minimo = @Stock_Minimo,
-                        Stock_Maximo = @Stock_Maximo,
-                        Ubicacion = @Ubicacion,
-                        Costo_Promedio = @Costo_Promedio,
-                        Saldo = @Saldo,
-                        Ultimo_Costo = @Ultimo_Costo,
-                        Ultima_Compra = @Ultima_Compra
-                    WHERE ID_Inventario = @ID_Inventario";
+            UPDATE Inventario SET 
+                Stock_Actual = @Stock_Actual,
+                Stock_Minimo = @Stock_Minimo,
+                Stock_Maximo = @Stock_Maximo,
+                Ubicacion = @Ubicacion,
+                Costo_Promedio = @Costo_Promedio,
+                Saldo = @Saldo,
+                Ultimo_Costo = @Ultimo_Costo,
+                Ultima_Compra = @Ultima_Compra
+            WHERE ID_Inventario = @ID_Inventario";
 
                 connection.Execute(query, new
                 {
-                    Stock_Actual = stockActual,
-                    Stock_Minimo = inventario.Stock_Minimo ?? inventarioActual.Stock_Minimo,
-                    Stock_Maximo = inventario.Stock_Maximo ?? inventarioActual.Stock_Maximo,
+                    Stock_Actual = stock,
+                    Stock_Minimo = invArt.Stock_Minimo ?? inventarioActual.Stock_Minimo,
+                    Stock_Maximo = invArt.Stock_Maximo ?? inventarioActual.Stock_Maximo,
                     Ubicacion = ubicacion,
                     Costo_Promedio = costoPromedio,
                     Saldo = saldo,
-                    Ultimo_Costo = inventario.Ultimo_Costo ?? inventarioActual.Ultimo_Costo,
-                    Ultima_Compra = inventario.Ultima_Compra ?? inventarioActual.Ultima_Compra,
+                    Ultimo_Costo = invArt.Ultimo_Costo ?? inventarioActual.Ultimo_Costo,
+                    Ultima_Compra = invArt.Ultima_Compra ?? inventarioActual.Ultima_Compra,
                     ID_Inventario = idInv
                 });
-
-
             }
         }
+
         #endregion
 
         #region Actualizar Stock

@@ -62,8 +62,8 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         public IHttpActionResult AgregarUnidadMedida(UnidadesMedidaNombre medida)
         {
-            if (medida == null || string.IsNullOrWhiteSpace(medida.Nombre_Unidad))
-                return BadRequest("El Nombre no debe ser Nulo");
+            if (medida == null || string.IsNullOrWhiteSpace(medida.Nombre_Unidad) || string.IsNullOrWhiteSpace(medida.Descripcion_Unidad))
+                return BadRequest("El Nombre y la Descripción no deben ser Nulos.");
             try
             {
                 _unidadesMedidaService.AgregarUnidadMedida(medida);
@@ -80,11 +80,11 @@ namespace Sistema_Almacen_MariaDB.Controllers
         [HttpPut]
         [Route("api/unidades-medida/{id}")]
 
-        public IHttpActionResult EditarUnidadMedida(int id, string nuevoNombre)
+        public IHttpActionResult EditarUnidadMedida(int id, string nuevoNombre, string nuevaDesc)
         {
             try
             {
-                _unidadesMedidaService.EditarUnidadMedida(id, nuevoNombre);
+                _unidadesMedidaService.EditarUnidadMedida(id, nuevoNombre, nuevaDesc);
                 return Ok("Unidad de medida actualizada correctamente.");
             }
             catch (Exception ex)

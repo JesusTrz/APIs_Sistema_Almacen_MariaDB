@@ -21,20 +21,9 @@ namespace Sistema_Almacen_MariaDB.Models
 
     }
 
-    public class InventarioDatos
-    {
-        public Nullable<int> Stock_Actual { get; set; }
-        public Nullable<int> Stock_Minimo { get; set; }
-        public Nullable<int> Stock_Maximo { get; set; }
-        public string Ubicacion { get; set; }
-        public Nullable<decimal> Costo_Promedio { get; set; }
-        public Nullable<decimal> Ultimo_Costo { get; set; }
-        public Nullable<System.DateTime> Ultima_Compra { get; set; }
-
-    }
-
     public class InventarioArticulos
     {
+        public int ID_Inventario { get; set; }
         public Nullable<int> ID_Articulo { get; set; }
         public string Nombre_Articulo { get; set; }
         public string Descripcion_Articulo { get; set; }
@@ -58,8 +47,17 @@ namespace Sistema_Almacen_MariaDB.Models
 
     public class AgregarArticuloaInventario
     {
-        public Nullable<int> ID_Sede { get; set; }
-        public Nullable<int> ID_Articulo { get; set; }
+        public int ID_Sede { get; set; }
+        public int ID_Articulo { get; set; }
+
+        public int? Stock_Actual { get; set; }
+        public int? Stock_Minimo { get; set; }
+        public int? Stock_Maximo { get; set; }
+        public string Ubicacion { get; set; }
+
+        public decimal? Costo_Promedio { get; set; }
+        public decimal? Ultimo_Costo { get; set; }
+        public DateTime? Ultima_Compra { get; set; }
 
 
     }

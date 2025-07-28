@@ -17,6 +17,7 @@ namespace Sistema_Almacen_MariaDB.Models
         ErrorMessage = "La contraseña debe tener al menos una mayúscula, una minúscula y un número.")]
         public string Contrasenia { get; set; }
         public Nullable<int> ID_Roles { get; set; }
+        public string Nombre_Rol { get; set; }
         public Nullable<int> ID_Sede { get; set; }
     }
     public class UsuariosDatos
@@ -50,6 +51,5 @@ namespace Sistema_Almacen_MariaDB.Models
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$",
         ErrorMessage = "La contraseña debe tener al menos una mayúscula, una minúscula y un número.")]
         public string Contrasenia { get; set; }
-        public int ID_Sede { get; set; }
     }
 }

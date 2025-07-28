@@ -59,15 +59,15 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         #region Editar Inventario de Articulo
         [HttpPut]
-        [Route("editar/{id}")]
-        public IHttpActionResult EditarArticuloInventario(int idInv, InventarioDatos inventario)
+        [Route("editar")]
+        public IHttpActionResult EditarArticuloInventario(int idInv, AgregarArticuloaInventario invArt)
         {
             try
             {
-                if (inventario == null)
+                if (invArt == null)
                     return BadRequest("Los datos del inventario son requeridos.");
 
-                _inventarioService.EditarArticuloInventario(idInv, inventario);
+                _inventarioService.EditarArticuloInventario(idInv, invArt);
                 return Ok("Inventario actualizado correctamente.");
             }
             catch (Exception ex)
@@ -116,12 +116,7 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
                 var resultado = _inventarioService.ObtenerInventarioFiltrado(filtro);
 
-                return Ok(new
-                {
-                    Exito = true,
-                    Mensaje = "Inventario filtrado obtenido correctamente.",
-                    Datos = resultado
-                });
+                return Ok(resultado);
             }
             catch (Exception ex)
             {

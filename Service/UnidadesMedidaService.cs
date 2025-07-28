@@ -24,7 +24,7 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT ID_Medida, Nombre_Unidad FROM Unidades_Medida";
+                string query = "SELECT ID_Medida, Nombre_Unidad, Descripcion_Unidad FROM Unidades_Medida";
                 return connection.Query<UnidadesMedidaDto>(query).ToList();
             }
         }
@@ -33,7 +33,7 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = @"SELECT ID_Medida, Nombre_Unidad FROM Unidades_Medida WHERE ID_Medida = @ID_Medida";
+                string query = @"SELECT ID_Medida, Nombre_Unidad, Descripcion_Unidad FROM Unidades_Medida WHERE ID_Medida = @ID_Medida";
                 return connection.Query<UnidadesMedidaDto>(query, new { ID_Medida = id }).ToList();
             }
         }
@@ -44,14 +44,14 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "INSERT INTO Unidades_Medida (Nombre_Unidad) VALUES (@Nombre_Unidad)";
-                connection.Execute(query, new { Nombre_Unidad = medida.Nombre_Unidad });
+                string query = "INSERT INTO Unidades_Medida (Nombre_Unidad, Descripcion_Unidad) VALUES (@Nombre_Unidad, @Descripcion_Unidad)";
+                connection.Execute(query, new { Nombre_Unidad = medida.Nombre_Unidad, Descripcion_Unidad = medida.Descripcion_Unidad });
             }
         }
         #endregion
 
         #region Editar Unidad de Medida
-        public void EditarUnidadMedida(int id, string nuevoNombre)
+        public void EditarUnidadMedida(int id, string nuevoNombre, string nuevaDesc)
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
@@ -72,8 +72,17 @@ namespace Sistema_Almacen_MariaDB.Service
                     throw new Exception("Ya existe otra unidad de medida con ese nombre.");
 
                 // Realizar la actualización
-                string query = "UPDATE Unidades_Medida SET Nombre_Unidad = @Nombre WHERE ID_Medida = @ID";
-                connection.Execute(query, new { Nombre = nuevoNombre, ID = id });
+                string query = @"UPDATE Unidades_Medida 
+                         SET Nombre_Unidad = @Nombre, 
+                             Descripcion_Unidad = @Descripcion_Unidad 
+                         WHERE ID_Medida = @ID";
+
+                connection.Execute(query, new
+                {
+                    Nombre = nuevoNombre,
+                    Descripcion_Unidad = nuevaDesc,
+                    ID = id
+                });
             }
         }
         #endregion
