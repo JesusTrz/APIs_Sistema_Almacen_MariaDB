@@ -14,5 +14,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
         void EliminarMovimiento(int id);
         List<MovimientosDto> GetAllMovimientos();
         List<MovimientosDto> GetMovimientosById(int id);
+        List<MovimientosDto> GetMovimientosEntrada();
+        List<MovimientosDto> GetMovimientosSalida();
     }
 }

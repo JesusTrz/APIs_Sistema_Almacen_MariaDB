@@ -36,6 +36,24 @@ namespace Sistema_Almacen_MariaDB.Service
                 return connection.Query<MovimientosDto>(query, new { ID_Movimiento = id }).ToList();
             }
         }
+
+        public List<MovimientosDto> GetMovimientosEntrada()
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = "SELECT ID_Movimiento, Nombre_Movimiento, Descripcion_Movimiento, Tipo FROM movimientos WHERE Tipo = 'Entrada'";
+                return connection.Query<MovimientosDto>(query).ToList();
+            }
+        }
+
+        public List<MovimientosDto> GetMovimientosSalida()
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = "SELECT ID_Movimiento, Nombre_Movimiento, Descripcion_Movimiento, Tipo FROM movimientos WHERE Tipo = 'Salida'";
+                return connection.Query<MovimientosDto>(query).ToList();
+            }
+        }
         #endregion
 
         #region Agregar Movimientos

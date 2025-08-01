@@ -53,6 +53,38 @@ namespace Sistema_Almacen_MariaDB.Controllers
                 return InternalServerError(ex);
             }
         }
+
+        [HttpGet]
+        [Route("api/movimientos/entrada")]
+
+        public IHttpActionResult GetMovimientosEntrada()
+        {
+            try
+            {
+                var movimientos = _movimientosService.GetMovimientosEntrada();
+                return Ok(movimientos);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+        [HttpGet]
+        [Route("api/movimientos/salida")]
+
+        public IHttpActionResult GetMovimientosSalida()
+        {
+            try
+            {
+                var movimientos = _movimientosService.GetMovimientosSalida();
+                return Ok(movimientos);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
         #endregion
 
         #region Agregar Movimientos
