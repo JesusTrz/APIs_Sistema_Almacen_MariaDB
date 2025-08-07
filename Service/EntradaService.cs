@@ -157,6 +157,44 @@ namespace Sistema_Almacen_MariaDB.Service
         }
         #endregion
 
+        #region Eliminar Entrada
+        public void EliminarEntrada(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM Entradas WHERE ID_Entradas = @ID_Entradas", 
+                    new { ID_Entradas = id});
+
+                if (existe == 0)
+                    throw new Exception("La Entrada no Existe!");
+
+                string query = "DELETE FROM Entradas WHERE ID_Entradas = @ID_Entradas";
+                connection.Execute(query, new { ID_Entradas = id });
+            }
+        }
+
+        public void EliminarArticuloEntrada(int idEntrada, int idArticulo)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) FROM detalle_entrada 
+              WHERE ID_Entradas = @ID_Entradas AND ID_Articulo = @ID_Articulo",
+                    new { ID_Entradas = idEntrada, ID_Articulo = idArticulo });
+
+                if (existe == 0)
+                    throw new Exception("El artículo no fue encontrado en la entrada.");
+
+                string query = @"DELETE FROM detalle_entrada 
+                         WHERE ID_Entradas = @ID_Entradas AND ID_Articulo = @ID_Articulo";
+
+                connection.Execute(query, new { ID_Entradas = idEntrada, ID_Articulo = idArticulo });
+            }
+        }
+
+        #endregion
+
         #region Modificar Entradas con detalles
         public bool ActualizarEntradasyDetalles(int idEntrada, GetEntradasDto dto)
         {
@@ -178,15 +216,17 @@ namespace Sistema_Almacen_MariaDB.Service
                             UPDATE Entradas SET 
                                 ID_Proveedores = @ID_Proveedores,
                                 ID_Movimiento = @ID_Movimiento,
+                                Fecha = @Fecha,
+                                Hora = @Hora,
                                 Comentarios = @Comentarios,
-                                ID_Sede = @ID_Sede,
-                                Fecha = CURDATE(),
-                                Hora = CURTIME()
+                                ID_Sede = @ID_Sede
                             WHERE ID_Entradas = @ID_Entradas";
                         connection.Execute(updateEntradaQuery, new
                         {
                             dto.ID_Proveedores,
                             dto.ID_Movimiento,
+                            dto.Fecha,
+                            dto.Hora,
                             dto.Comentarios,
                             dto.ID_Sede,
                             ID_Entradas = idEntrada
@@ -248,7 +288,7 @@ namespace Sistema_Almacen_MariaDB.Service
                                     Ultima_Compra = CURDATE(),
                                     Costo_Promedio = @Costo_Promedio,
                                     Saldo = @Saldo
-                                WHERE ID_Inventario = @ID_Inventario", 
+                                WHERE ID_Inventario = @ID_Inventario",
                                 new 
                                 {
                                     Stock = nuevoStock,

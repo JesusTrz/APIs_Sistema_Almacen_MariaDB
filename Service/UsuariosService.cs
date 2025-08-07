@@ -28,7 +28,17 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT ID_Usuario, Nombre_Usuario, Contrasenia, ID_Roles, ID_Sede FROM Usuarios";
+                string query = @"
+            SELECT 
+                u.ID_Usuario, 
+                u.Nombre_Usuario, 
+                u.Contrasenia, 
+                u.ID_Roles, 
+                u.ID_Sede,
+                r.Nombre_Rol
+            FROM Usuarios u
+            JOIN Roles r ON u.ID_Roles = r.ID_Roles";
+
                 return connection.Query<UsuariosDto>(query).ToList();
             }
         }
@@ -39,10 +49,30 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = @"SELECT ID_Usuario, Nombre_Usuario, Contrasenia, ID_Roles, ID_Sede 
-                         FROM Usuarios 
-                         WHERE ID_Sede = @ID_Sede";
+                string query = @"
+            SELECT 
+                u.ID_Usuario, 
+                u.Nombre_Usuario, 
+                u.Contrasenia, 
+                u.ID_Roles, 
+                u.ID_Sede,
+                r.Nombre_Rol
+            FROM Usuarios u
+            JOIN Roles r ON u.ID_Roles = r.ID_Roles
+            WHERE u.ID_Sede = @ID_Sede";
+
                 return connection.Query<UsuariosDto>(query, new { ID_Sede = idSede }).ToList();
+            }
+        }
+        #endregion
+
+        #region Obtener Usuarios por Id
+        public UsuariosDto GetUsersById(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = "SELECT Nombre_Usuario FROM Usuarios WHERE ID_Usuario = @ID_Usuario";
+                return connection.QueryFirstOrDefault<UsuariosDto>(query, new { ID_Usuario = id });
             }
         }
         #endregion
@@ -103,6 +133,48 @@ namespace Sistema_Almacen_MariaDB.Service
 
                 string queryUpdate = "UPDATE Usuarios SET Contrasenia = @Contrasenia WHERE ID_Usuario = @ID_Usuario";
                 connection.Execute(queryUpdate, new { Contrasenia = hashNueva, ID_Usuario = idUsuario });
+            }
+        }
+        #endregion
+
+        #region Cambiar Nombre de usuario
+        public void CambiarNombreUsuario(int id, UsuariosDto usuarios)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var usuarioActual = connection.QueryFirstOrDefault<UsuariosDto>("SELECT ID_Usuario, Nombre_Usuario FROM Usuarios WHERE ID_Usuario = @ID_Usuario", new { ID_Usuario = id });
+                if (usuarioActual == null)
+                    throw new Exception("El Usuario no Existe.");
+
+                var nombreUsuario = string.IsNullOrWhiteSpace(usuarios.Nombre_Usuario) ? usuarioActual.Nombre_Usuario : usuarios.Nombre_Usuario;
+
+                var duplicado = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Usuarios WHERE Nombre_Usuario = @Nombre_Usuario AND ID_Usuario != @ID_Usuario", 
+                    new { Nombre_Usuario = nombreUsuario, ID_Usuario = id });
+
+                if (duplicado > 0)
+                    throw new Exception("Ya Existe un Usuario con ese Nombre!");
+
+                string query = @"UPDATE Usuarios SET Nombre_Usuario = @Nombre_Usuario WHERE ID_Usuario = @ID_Usuario";
+                connection.Execute(query, new
+                {
+                    ID_Usuario = id,
+                    Nombre_Usuario = nombreUsuario
+                });
+            }
+        }
+        #endregion
+
+        #region Eliminar Usuarios
+        public void EliminarUsuario(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Usuarios WHERE ID_Usuario = @ID_Usuario", new { ID_Usuario = id });
+                if (existe == 0)
+                    throw new Exception("El Usuario no Existe.");
+
+                string query = "DELETE FROM usuarios WHERE ID_Usuario = @ID_Usuario";
+                connection.Execute(query, new { ID_Usuario = id });
             }
         }
         #endregion

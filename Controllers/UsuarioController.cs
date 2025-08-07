@@ -57,6 +57,31 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Obtener Usuarios por Id
+        [HttpGet]
+        [Route("api/usuarios/{id}")]
+
+        public IHttpActionResult GetUsersById(int id)
+        {
+            try
+            {
+                var usuarios = _usuariosService.GetUsersById(id);
+                if(usuarios == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    return Ok(usuarios);
+                }
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+        #endregion
+
         #region Crear Nuevos Usuarios
         [HttpPost]
         [Route("api/crate/users")]
@@ -78,6 +103,42 @@ namespace Sistema_Almacen_MariaDB.Controllers
             }
         }
 
+        #endregion
+
+        #region Eliminar Usuarios
+        [HttpDelete]
+        [Route("api/eliminar/usuario")]
+
+        public IHttpActionResult EliminarUsuario(int id)
+        {
+            try
+            {
+                _usuariosService.EliminarUsuario(id);
+                return Ok("Usuario eliminado correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region Modificar nombre de Usuario
+        [HttpPut]
+        [Route("api/usuarios/edit")]
+
+        public IHttpActionResult CambiarNombreUsuario(int id, UsuariosDto usuarios)
+        {
+            try
+            {
+                _usuariosService.CambiarNombreUsuario(id, usuarios);
+                return Ok("Nombre de Usuario Editaco Correctamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         #endregion
 
         #region Login de Usuarios

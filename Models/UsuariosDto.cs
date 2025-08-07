@@ -34,7 +34,6 @@ namespace Sistema_Almacen_MariaDB.Models
 
     public class CambioContrasenia
     {
-        public int ID_Usuario { get; set; }
         public string ViejaContrasenia { get; set; }
         [Required]
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres.")]

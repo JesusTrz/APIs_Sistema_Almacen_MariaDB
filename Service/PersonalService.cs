@@ -24,7 +24,7 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT ID_Personal, Nombre, Apellidos, ID_Sede FROM Personal";
+                string query = "SELECT ID_Personal, Nombre, ID_Sede FROM Personal";
                 return connection.Query<PersonalDto>(query).ToList();
             }
         }
@@ -33,7 +33,7 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT ID_Personal, Nombre, Apellidos, ID_Sede FROM Personal WHERE ID_Personal = @ID_Personal";
+                string query = "SELECT ID_Personal, Nombre, ID_Sede FROM Personal WHERE ID_Personal = @ID_Personal";
                 return connection.Query<PersonalDto>(query, new { ID_Personal = id }).ToList();
             }
         }
@@ -42,7 +42,7 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT ID_Personal, Nombre, Apellidos, ID_Sede FROM Personal WHERE ID_Sede = @ID_Sede";
+                string query = "SELECT ID_Personal, Nombre, ID_Sede FROM Personal WHERE ID_Sede = @ID_Sede";
                 return connection.Query<PersonalDto>(query, new { ID_Sede = idSede }).ToList();
             }
         }
@@ -52,7 +52,7 @@ namespace Sistema_Almacen_MariaDB.Service
             using (var connection = new MySqlConnection(_connectionString))
             {
                 string query = @"
-            SELECT ID_Personal, Nombre, Apellidos, ID_Sede 
+            SELECT ID_Personal, Nombre, ID_Sede 
             FROM Personal 
             WHERE Nombre LIKE @NombreInicio AND ID_Sede = @ID_Sede
             ORDER BY Nombre ASC";
@@ -77,8 +77,8 @@ namespace Sistema_Almacen_MariaDB.Service
                     throw new Exception("Debe seleccionar una sede válida.");
 
                 var personaExistente = connection.ExecuteScalar<int>(
-                    "SELECT COUNT(*) FROM Personal WHERE Nombre = @Nombre AND Apellidos = @Apellidos", 
-                    new { persona.Nombre, persona.Apellidos });
+                    "SELECT COUNT(*) FROM Personal WHERE Nombre = @Nombre", 
+                    new { persona.Nombre});
 
                 if(personaExistente > 0 )
                     throw new Exception("Ya existe una persona con ese nombre y apellidos.");
@@ -90,7 +90,7 @@ namespace Sistema_Almacen_MariaDB.Service
                 if (sedeExiste == 0)
                     throw new Exception("La sede especificada no existe.");
 
-                string query = @"INSERT INTO Personal (Nombre, Apellidos, ID_Sede) VALUES (@Nombre, @Apellidos, @ID_Sede)";
+                string query = @"INSERT INTO Personal (Nombre, ID_Sede) VALUES (@Nombre, @ID_Sede)";
                 connection.Execute(query, persona);
             }
         }
@@ -102,7 +102,7 @@ namespace Sistema_Almacen_MariaDB.Service
             using (var connection = new MySqlConnection(_connectionString))
             {
                 var personaActual = connection.QueryFirstOrDefault<PersonalDatos>(
-                    @"SELECT ID_Personal, Nombre, Apellidos, ID_Sede FROM Personal WHERE ID_Personal = @ID_Personal", 
+                    @"SELECT ID_Personal, Nombre, ID_Sede FROM Personal WHERE ID_Personal = @ID_Personal", 
                     new { ID_Personal = id });
 
                 if(personaActual == null)
@@ -121,14 +121,12 @@ namespace Sistema_Almacen_MariaDB.Service
                 }
 
                 string nuevoNombre = string.IsNullOrWhiteSpace(persona.Nombre) ? personaActual.Nombre : persona.Nombre;
-                string nuevosApellidos = string.IsNullOrWhiteSpace(persona.Apellidos) ? personaActual.Apellidos : persona.Apellidos;
 
-                string query = @"UPDATE Personal SET Nombre = @Nombre, Apellidos = @Apellidos, ID_Sede = @ID_Sede WHERE ID_Personal = @ID_Personal";
+                string query = @"UPDATE Personal SET Nombre = @Nombre, ID_Sede = @ID_Sede WHERE ID_Personal = @ID_Personal";
 
                 connection.Execute(query, new
                 {
                     Nombre = nuevoNombre,
-                    Apellidos = nuevosApellidos,
                     ID_Sede = nuevaSede,
                     ID_Personal = id
                 });

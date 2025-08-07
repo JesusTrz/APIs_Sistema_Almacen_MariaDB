@@ -55,6 +55,40 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Eliminar Salidas
+        [HttpDelete]
+        [Route("api/salidas/delete/salidas")]
+
+        public IHttpActionResult EliminarSalidas(int id)
+        {
+            try
+            {
+                _salidaService.EliminarSalidas(id);
+                return Ok("Salida Eliminada Correctamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Route("api/salidas/ delete/eliminar-articulo")]
+
+        public IHttpActionResult EliminarArticulosSalidas(int idSalida, int idArticulo)
+        {
+            try
+            {
+                _salidaService.EliminarArticulosSalidas(idSalida, idArticulo);
+                return Ok("Articulo Eliminado correctamente de la salida.");
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(new Exception("Error al eliminar el artículo: " + ex.Message));
+            }
+        }
+        #endregion
+
         #region Modificar salidas con detalles
         [HttpPut]
         [Route("api/salidas/put")]

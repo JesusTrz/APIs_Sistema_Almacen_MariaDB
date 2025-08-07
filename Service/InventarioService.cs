@@ -178,6 +178,21 @@ namespace Sistema_Almacen_MariaDB.Service
 
         #endregion
 
+        #region Eliminar Inventario
+        public void EliminarArticulodeInventario(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Inventario WHERE ID_Inventario = @ID_Inventario", new { ID_Inventario = id });
+                if (existe == 0)
+                    throw new Exception("El articulo no existe en el inventario!");
+
+                string query = "DELETE FROM Inventario WHERE ID_Inventario = @ID_Inventario";
+                connection.Execute(query, new { ID_Inventario = id });
+            }
+        }
+        #endregion
+
         #region Actualizar Stock
         public bool ActualizarStockArticulo(StockEntrada entrada)
         {
@@ -300,6 +315,7 @@ namespace Sistema_Almacen_MariaDB.Service
         }
 
         #endregion
+
 
     }
 }

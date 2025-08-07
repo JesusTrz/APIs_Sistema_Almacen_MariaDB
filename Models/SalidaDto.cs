@@ -37,7 +37,6 @@ namespace Sistema_Almacen_MariaDB.Models
         public string Numero_Placa { get; set; }
         public Nullable<int> ID_Personal { get; set; }
         public string Nombre { get; set; }
-        public string Apellidos { get; set; }
         public string Comentarios { get; set; }
         public Nullable<int> ID_Sede { get; set; }
         public List<GetDetalleSalidasDto> Detalles { get; set; }

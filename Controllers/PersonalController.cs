@@ -97,7 +97,6 @@ namespace Sistema_Almacen_MariaDB.Controllers
         public IHttpActionResult AgregarPersona(PersonalDatos persona)
         {
             if(persona == null || string.IsNullOrWhiteSpace(persona.Nombre)
-                               || string.IsNullOrWhiteSpace(persona.Apellidos)
                                || persona.ID_Sede <= 0)
                 return BadRequest("La Persona no debe contener datos Vacios!");
             try

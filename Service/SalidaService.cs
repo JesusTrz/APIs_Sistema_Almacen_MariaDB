@@ -129,7 +129,7 @@ namespace Sistema_Almacen_MariaDB.Service
                 m.Nombre_Movimiento, m.Descripcion_Movimiento,
                 cc.Nombre_CenCost,
                 u.Numero_Placa,
-                p.Nombre, p.Apellidos,
+                p.Nombre,
                 ds.ID_Articulo, ds.Cantidad, ds.Precio_Unitario, ds.Total,
                 a.Nombre_Articulo,
                 um.Nombre_Unidad
@@ -167,6 +167,41 @@ namespace Sistema_Almacen_MariaDB.Service
             return salidasDict.Values.ToList();
         }
 
+        #endregion
+
+        #region Eliminar Salidas
+        public void EliminarSalidas(int id)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM Salidas WHERE ID_Salida = @ID_Salida", 
+                    new { ID_Salida = id });
+
+                if(existe == 0)
+                    throw new Exception("La Salida no Existe!");
+
+                string query = "DELETE FROM Salidas WHERE ID_Salida = @ID_Salida";
+                connection.Execute(query, new { ID_Salida = id });
+            }
+        }
+
+        public void EliminarArticulosSalidas(int idSalida, int idArticulo)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var existe = connection.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) FROM Detalle_Salida WHERE ID_Salida = @ID_Salida AND ID_Articulo = @ID_Articulo", 
+                    new { ID_Salida = idSalida, ID_Articulo = idArticulo });
+
+                if (existe == 0)
+                    throw new Exception("El Articulo no fue encontrado en la Salida.");
+
+                string query = @"DELETE FROM Detalle_Salida WHERE ID_Salida = @ID_Salida AND ID_Articulo = @ID_Articulo";
+
+                connection.Execute(query, new { ID_Salida = idSalida, ID_Articulo = idArticulo });
+            }
+        }
         #endregion
 
         #region Modificar Salida y Detalles

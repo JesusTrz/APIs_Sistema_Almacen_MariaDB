@@ -226,6 +226,7 @@
     <Compile Include="Controllers\MovimientosController.cs" />
     <Compile Include="Controllers\PersonalController.cs" />
     <Compile Include="Controllers\ProveedoresController.cs" />
+    <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\SalidaController.cs" />
     <Compile Include="Controllers\SedesController.cs" />
     <Compile Include="Controllers\UnidadesController.cs" />
@@ -243,6 +244,7 @@
     <Compile Include="Infraestructure\IMovimientosService.cs" />
     <Compile Include="Infraestructure\IPersonalService.cs" />
     <Compile Include="Infraestructure\IProveedoresService.cs" />
+    <Compile Include="Infraestructure\IRolesService.cs" />
     <Compile Include="Infraestructure\ISalidaService.cs" />
     <Compile Include="Infraestructure\ISedesService.cs" />
     <Compile Include="Infraestructure\IUnidadesMedidaService.cs" />
@@ -273,6 +275,7 @@
     <Compile Include="Service\MovimientosService.cs" />
     <Compile Include="Service\PersonalService.cs" />
     <Compile Include="Service\ProveedoresService.cs" />
+    <Compile Include="Service\RolesService.cs" />
     <Compile Include="Service\SalidaService.cs" />
     <Compile Include="Service\SedesService.cs" />
     <Compile Include="Service\UnidadesMedidaService.cs" />
@@ -347,7 +350,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="DataContext\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\bootstrap.min.js.map" />

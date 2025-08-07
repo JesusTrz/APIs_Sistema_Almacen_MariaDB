@@ -10,6 +10,8 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     public interface IEntradaService
     {
         bool ActualizarEntradasyDetalles(int idEntrada, GetEntradasDto dto);
+        void EliminarEntrada(int id);
+        void EliminarArticuloEntrada(int idEntrada, int idArticulo);
         List<GetEntradasDto> ObtenerEntradasPorSede(int idSede);
         bool RegistrarEntradayDetalles(EntradasDto entradasdto);
     }

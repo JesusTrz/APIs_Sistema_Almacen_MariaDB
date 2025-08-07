@@ -77,6 +77,24 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Eliminar Articulo de Inventario
+        [HttpDelete]
+        [Route("api/inventario/eliminar/{id}")]
+
+        public IHttpActionResult EliminarArticulodeInventario(int id)
+        {
+            try
+            {
+                _inventarioService.EliminarArticulodeInventario(id);
+                return Ok("Articulo Eliminado del Inventario Exitosamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region Actualizar Stock
         [HttpPost]
         [Route("api/inventario/actualizar-stock")]

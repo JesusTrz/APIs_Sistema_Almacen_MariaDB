@@ -54,6 +54,40 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Eliminar Entradas
+        [HttpDelete]
+        [Route("api/entradas/delete")]
+
+        public IHttpActionResult EliminarEntrada(int id)
+        {
+            try
+            {
+                _entradaService.EliminarEntrada(id);
+                return Ok("Entrada Eliminada Correctamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Route("api/entrada/eliminar-articulo")]
+        public IHttpActionResult EliminarArticuloDeEntrada(int idEntrada, int idArticulo)
+        {
+            try
+            {
+                _entradaService.EliminarArticuloEntrada(idEntrada, idArticulo);
+                return Ok("Artículo eliminado correctamente de la entrada.");
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(new Exception("Error al eliminar el artículo: " + ex.Message));
+            }
+        }
+
+        #endregion
+
         #region Modificar entrada con detalles
         [HttpPut]
         [Route("api/entrada/modificar")]
