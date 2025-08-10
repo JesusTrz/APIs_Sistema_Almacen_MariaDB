@@ -68,9 +68,6 @@ namespace Sistema_Almacen_MariaDB.Models
         public int ID_Articulo { get; set; }
         public int Cantidad { get; set; }
     }
-
-
-
     public class InventarioFiltro
     {
         public int ID_Sede { get; set; }

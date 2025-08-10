@@ -10,9 +10,9 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     public interface IPersonalService
     {
         void AgregarPersona(PersonalDatos persona);
-        List<PersonalDto> BuscarPersonalPorNombreYPorSede(string inicioNombre, int idSede);
         void EditarPersona(int id, PersonalDatos persona);
         void EliminarPersonal(int id);
+        bool EliminarTodoElPersonal(int idSede);
         List<PersonalDto> GetAllPersonal();
         List<PersonalDto> GetPersonalById(int id);
         List<PersonalDto> GetUsuariosByIdSede(int idSede);

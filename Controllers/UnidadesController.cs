@@ -74,6 +74,23 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Base de datos
+        [HttpDelete]
+        [Route("api/eliminar/todasunidades")]
+        public IHttpActionResult EliminarTodasUnidades(int idSede)
+        {
+            try
+            {
+                _unidadesService.EliminarTodasUnidades(idSede);
+                return Ok("Las Unidades fueron eliminadas exitosamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
         #region Agregar nuevas Unidades
         [HttpPost]
         [Route("api/unidades/add")]

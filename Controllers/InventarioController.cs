@@ -57,6 +57,41 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
         #endregion
 
+        #region Stock Bajo
+        [HttpGet]
+        [Route("api/inventario/stockbajo")]
+        public IHttpActionResult VerificarStockBajo(int idSede)
+        {
+            try
+            {
+                var stockBajo = _inventarioService.VerificarStockBajo(idSede);
+                return Ok(stockBajo);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+        #endregion
+
+        #region Stock Alto
+        [HttpGet]
+        [Route("api/inventario/stockalto")]
+
+        public IHttpActionResult VerificarStockAlto(int idSede)
+        {
+            try
+            {
+                var stockAlto = _inventarioService.VerificarStockAlto(idSede);
+                return Ok(stockAlto);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+        #endregion
+
         #region Editar Inventario de Articulo
         [HttpPut]
         [Route("editar")]
@@ -122,26 +157,71 @@ namespace Sistema_Almacen_MariaDB.Controllers
 
         #endregion
 
-        #region Filtro
-        [HttpPost]
-        [Route("api/inventario/filtrar")]
-        public IHttpActionResult ObtenerInventarioFiltrado([FromBody] InventarioFiltro filtro)
+        #region Base de Datos
+        [HttpPut]
+        [Route("api/inventario/reiniciarstocks")]
+
+        public IHttpActionResult ReiniciarInventarioPorSede(int idSede)
         {
             try
             {
-                if (filtro == null || filtro.Campos == null || filtro.Campos.Count == 0)
-                    return BadRequest("Debes proporcionar los campos y el ID de la sede para filtrar.");
-
-                var resultado = _inventarioService.ObtenerInventarioFiltrado(filtro);
-
-                return Ok(resultado);
+                _inventarioService.ReiniciarInventarioPorSede(idSede);
+                return Ok("El Stock de Inventario fue Reiniciado Exitosamente!");
             }
             catch (Exception ex)
             {
-                return InternalServerError(new Exception($"Error al filtrar inventario: {ex.Message}"));
+                return BadRequest(ex.Message);
             }
         }
 
+        [HttpPut]
+        [Route("api/inventario/reiniciarcostossaldos")]
+
+        public IHttpActionResult ReiniciarCostoSaldo(int idSede)
+        {
+            try
+            {
+                _inventarioService.ReiniciarCostoSaldo(idSede);
+                return Ok("Los Costos y Saldos Fueron Reiniciados.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut]
+        [Route("api/inventario/ReiniciarInventario")]
+
+        public IHttpActionResult ReiniciarInventario(int idSede)
+        {
+            try
+            {
+                _inventarioService.ReiniciarInventario(idSede);
+                return Ok("El Inventario de los Articulos fué reiniciado Exitosamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Route("api/inventario/EliminarTodoslosArticulos")]
+
+        public IHttpActionResult EliminarTodosArticulosInventario(int idSede)
+        {
+            try
+            {
+                _inventarioService.EliminarTodosArticulosInventario(idSede);
+                return Ok("El Inventario se Vacio Exitosamente!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         #endregion
+
     }
 }

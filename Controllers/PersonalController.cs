@@ -72,22 +72,24 @@ namespace Sistema_Almacen_MariaDB.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("api/personal/search/by_name")]
-        public IHttpActionResult BuscarPersonal(string inicioNombre, int idSede)
+        #endregion
+
+        #region Base de datos
+        [HttpDelete]
+        [Route("api/personal/eliminartodo")]
+
+        public IHttpActionResult EliminarTodoElPersonal(int idSede)
         {
             try
             {
-                var resultado = _personalService.BuscarPersonalPorNombreYPorSede(inicioNombre, idSede);
-                return Ok(resultado); // 👈 Esto es una lista
+                _personalService.EliminarTodoElPersonal(idSede);
+                return Ok("El personal de Elimino Exitosamente!");
             }
             catch (Exception ex)
             {
-                return InternalServerError(ex);
+                return BadRequest(ex.Message);
             }
         }
-
-
         #endregion
 
         #region Agregar Personal

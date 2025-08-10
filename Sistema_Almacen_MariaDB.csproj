@@ -222,6 +222,7 @@
     <Compile Include="Controllers\EntradaController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InventarioController.cs" />
+    <Compile Include="Controllers\KardexController.cs" />
     <Compile Include="Controllers\LineaController.cs" />
     <Compile Include="Controllers\MovimientosController.cs" />
     <Compile Include="Controllers\PersonalController.cs" />
@@ -240,6 +241,7 @@
     <Compile Include="Infraestructure\ICuentaService.cs" />
     <Compile Include="Infraestructure\IEntradaService.cs" />
     <Compile Include="Infraestructure\IInventarioService.cs" />
+    <Compile Include="Infraestructure\IKardexService.cs" />
     <Compile Include="Infraestructure\ILineaService.cs" />
     <Compile Include="Infraestructure\IMovimientosService.cs" />
     <Compile Include="Infraestructure\IPersonalService.cs" />
@@ -255,6 +257,7 @@
     <Compile Include="Models\CuentaDto.cs" />
     <Compile Include="Models\EntradasDto.cs" />
     <Compile Include="Models\InventarioDto.cs" />
+    <Compile Include="Models\KardexDto.cs" />
     <Compile Include="Models\LineaDto.cs" />
     <Compile Include="Models\MovimientosDto.cs" />
     <Compile Include="Models\PersonalDto.cs" />
@@ -271,6 +274,7 @@
     <Compile Include="Service\CuentaService.cs" />
     <Compile Include="Service\EntradaService.cs" />
     <Compile Include="Service\InventarioService.cs" />
+    <Compile Include="Service\KardexService.cs" />
     <Compile Include="Service\LineaService.cs" />
     <Compile Include="Service\MovimientosService.cs" />
     <Compile Include="Service\PersonalService.cs" />

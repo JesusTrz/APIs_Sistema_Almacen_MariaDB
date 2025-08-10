@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Dynamic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Web;
 
@@ -122,6 +123,86 @@ namespace Sistema_Almacen_MariaDB.Service
             }
         }
 
+        #endregion
+
+        #region Base de Datos
+        public bool ReiniciarInventarioPorSede(int idSede)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = @"
+                    UPDATE Inventario
+                    SET 
+                        Stock_Actual = 0,
+                        Stock_Minimo = 0,
+                        Stock_Maximo = 0
+                    WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
+            }
+        }
+
+        public bool ReiniciarCostoSaldo(int idSede)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = @"
+                    UPDATE Inventario
+                    SET 
+                        Costo_Promedio = 0,
+                        Saldo = 0
+                    WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
+            }
+        }
+
+        public bool ReiniciarInventario(int idSede)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = @"
+                    UPDATE Inventario
+                    SET 
+                        Stock_Actual = 0,
+                        Stock_Minimo = 0,
+                        Stock_Maximo = 0,
+                        Costo_Promedio = 0,
+                        Saldo = 0
+                    WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
+            }
+        }
+
+        public bool EliminarTodosArticulosInventario(int idSede)
+        {
+            if (idSede <= 0)
+                throw new ArgumentException("ID de sede inválido.", nameof(idSede));
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = "DELETE FROM Inventario WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
+            }
+        }
         #endregion
 
         #region Editar Inventario
@@ -242,80 +323,85 @@ namespace Sistema_Almacen_MariaDB.Service
         }
         #endregion
 
-        #region Filtro
-        public List<ExpandoObject> ObtenerInventarioFiltrado(InventarioFiltro filtros)
+        #region Verificar Stock Bajo
+        public List<InventarioArticulos> VerificarStockBajo(int idSede)
         {
+            if (idSede <= 0)
+                throw new ArgumentException("ID de sede inválido.", nameof(idSede));
+
             using (var connection = new MySqlConnection(_connectionString))
             {
                 string query = @"
             SELECT 
                 i.ID_Inventario,
+                a.ID_Articulo,
+                a.Nombre_Articulo,
+                a.Descripcion_Articulo,
+                a.Numero_Parte,
+                a.ID_Linea,
+                l.Nombre_Linea,
+                a.ID_Medida,
+                um.Nombre_Unidad,
+                i.Ubicacion,
                 i.Stock_Actual,
                 i.Stock_Minimo,
                 i.Stock_Maximo,
                 i.Costo_Promedio,
                 i.Saldo,
                 i.Ultimo_Costo,
-                i.Ultima_Compra,
-                i.Ubicacion,
+                i.Ultima_Compra
+            FROM Inventario i
+            INNER JOIN Articulo a ON i.ID_Articulo = a.ID_Articulo
+            LEFT JOIN Linea l ON a.ID_Linea = l.ID_Linea
+            LEFT JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+            WHERE i.ID_Sede = @ID_Sede
+              AND i.Stock_Actual <= i.Stock_Minimo
+            ORDER BY a.Nombre_Articulo ASC";
+
+                return connection.Query<InventarioArticulos>(query, new { ID_Sede = idSede }).ToList();
+            }
+        }
+        #endregion
+
+        #region Stock Alto
+        public List<InventarioArticulos> VerificarStockAlto(int idSede)
+        {
+            if (idSede <= 0)
+                throw new ArgumentException("ID de sede inválido.", nameof(idSede));
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = @"
+            SELECT 
+                i.ID_Inventario,
                 a.ID_Articulo,
                 a.Nombre_Articulo,
                 a.Descripcion_Articulo,
                 a.Numero_Parte,
+                a.ID_Linea,
+                l.Nombre_Linea,
+                a.ID_Medida,
                 um.Nombre_Unidad,
-                l.Nombre_Linea
+                i.Ubicacion,
+                i.Stock_Actual,
+                i.Stock_Minimo,
+                i.Stock_Maximo,
+                i.Costo_Promedio,
+                i.Saldo,
+                i.Ultimo_Costo,
+                i.Ultima_Compra
             FROM Inventario i
-            INNER JOIN Articulo a ON a.ID_Articulo = i.ID_Articulo
-            LEFT JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+            INNER JOIN Articulo a ON i.ID_Articulo = a.ID_Articulo
             LEFT JOIN Linea l ON a.ID_Linea = l.ID_Linea
-            WHERE i.ID_Sede = @ID_Sede";
+            LEFT JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+            WHERE i.ID_Sede = @ID_Sede
+              AND i.Stock_Actual >= i.Stock_Maximo
+            ORDER BY a.Nombre_Articulo DESC";
 
-                var datos = connection.Query<dynamic>(query, new { ID_Sede = filtros.ID_Sede });
-
-                var resultado = new List<ExpandoObject>();
-
-                foreach (var item in datos)
-                {
-                    IDictionary<string, object> obj = new ExpandoObject();
-
-                    foreach (var campo in filtros.Campos)
-                    {
-                        if (((IDictionary<string, object>)item).ContainsKey(campo))
-                        {
-                            obj[campo] = ((IDictionary<string, object>)item)[campo];
-                        }
-                        else
-                        {
-                            // Convertir nombres según sea necesario
-                            switch (campo)
-                            {
-                                case "Nombre_Unidad": obj[campo] = item.Nombre_Unidad; break;
-                                case "Nombre_Linea": obj[campo] = item.Nombre_Linea; break;
-                                case "Nombre_Articulo": obj[campo] = item.Nombre_Articulo; break;
-                                case "Descripcion_Articulo": obj[campo] = item.Descripcion_Articulo; break;
-                                case "Numero_Parte": obj[campo] = item.Numero_Parte; break;
-                                case "Ubicacion": obj[campo] = item.Ubicacion; break;
-                                case "Stock_Actual": obj[campo] = item.Stock_Actual; break;
-                                case "Stock_Minimo": obj[campo] = item.Stock_Minimo; break;
-                                case "Stock_Maximo": obj[campo] = item.Stock_Maximo; break;
-                                case "Costo_Promedio": obj[campo] = item.Costo_Promedio; break;
-                                case "Saldo": obj[campo] = item.Saldo; break;
-                                case "Ultimo_Costo": obj[campo] = item.Ultimo_Costo; break;
-                                case "Ultima_Compra": obj[campo] = item.Ultima_Compra; break;
-                                default: break;
-                            }
-                        }
-                    }
-
-                    resultado.Add((ExpandoObject)obj);
-                }
-
-                return resultado;
+                return connection.Query<InventarioArticulos>(query, new { ID_Sede = idSede }).ToList();
             }
         }
-
         #endregion
-
 
     }
 }

@@ -11,6 +11,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
     {
         void AgregarUnidad(UnidadesDatos unidad);
         void EditarUnidades(int id, UnidadesDatos unidad);
+        bool EliminarTodasUnidades(int idSede);
         void EliminarUnidad(int id);
         List<UnidadesDto> GetAllUnidades();
         List<UnidadesDto> GetUnidadesById(int id);

@@ -14,7 +14,12 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
         void AgregarArticuloaInventario(AgregarArticuloaInventario invArt);
         void EditarArticuloInventario(int idInv, AgregarArticuloaInventario invArt);
         void EliminarArticulodeInventario(int id);
+        bool EliminarTodosArticulosInventario(int idSede);
         List<InventarioArticulos> GetInventarioPorSede(int idSede);
-        List<ExpandoObject> ObtenerInventarioFiltrado(InventarioFiltro filtros);
+        bool ReiniciarCostoSaldo(int idSede);
+        bool ReiniciarInventario(int idSede);
+        bool ReiniciarInventarioPorSede(int idSede);
+        List<InventarioArticulos> VerificarStockAlto(int idSede);
+        List<InventarioArticulos> VerificarStockBajo(int idSede);
     }
 }

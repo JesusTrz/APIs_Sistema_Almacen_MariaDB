@@ -47,25 +47,6 @@ namespace Sistema_Almacen_MariaDB.Service
             }
         }
 
-        public List<PersonalDto> BuscarPersonalPorNombreYPorSede(string inicioNombre, int idSede)
-        {
-            using (var connection = new MySqlConnection(_connectionString))
-            {
-                string query = @"
-            SELECT ID_Personal, Nombre, ID_Sede 
-            FROM Personal 
-            WHERE Nombre LIKE @NombreInicio AND ID_Sede = @ID_Sede
-            ORDER BY Nombre ASC";
-
-                return connection.Query<PersonalDto>(query, new
-                {
-                    NombreInicio = inicioNombre + "%",
-                    ID_Sede = idSede
-                }).ToList();
-            }
-        }
-
-
         #endregion
 
         #region Agregar Personal
@@ -147,6 +128,25 @@ namespace Sistema_Almacen_MariaDB.Service
 
                 string query = "DELETE FROM Personal WHERE ID_Personal = @ID_Personal";
                 connection.Execute(query, new { ID_Personal = id });
+            }
+        }
+        #endregion
+
+        #region Base de Datos
+        public bool EliminarTodoElPersonal(int idSede)
+        {
+            if (idSede <= 0)
+                throw new ArgumentException("ID de Sede inválido.", nameof(idSede));
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = "DELETE FROM Personal WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
             }
         }
         #endregion

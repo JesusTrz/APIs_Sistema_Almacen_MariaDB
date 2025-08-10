@@ -52,6 +52,25 @@ namespace Sistema_Almacen_MariaDB.Service
         }
         #endregion
 
+        #region base de datos
+        public bool EliminarTodasUnidades(int idSede)
+        {
+            if (idSede <= 0)
+                throw new ArgumentException("ID de sede inválido.", nameof(idSede));
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var query = "DELETE FROM Unidades WHERE ID_Sede = @ID_Sede";
+
+                int filasAfectadas = connection.Execute(query, new { ID_Sede = idSede });
+
+                return filasAfectadas > 0;
+            }
+        }
+        #endregion
+
         #region Agregar nuevas Unidades
         public void AgregarUnidad(UnidadesDatos unidad)
         {
