@@ -14,5 +14,12 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
         void EliminarArticuloEntrada(int idEntrada, int idArticulo);
         List<GetEntradasDto> ObtenerEntradasPorSede(int idSede);
         bool RegistrarEntradayDetalles(EntradasDto entradasdto);
+        GetEntradasDto ObtenerEntradaPorId(int idEntrada, int idSede);
+        List<GetEntradasDto> ObtenerEntradasFiltradas(int? idSede = null, DateTime? fechaInicio = null, DateTime? fechaFin = null);
+        List<GetEntradasDto> ObtenerEntradasPorProveedor(int idProveedor, DateTime? fechaInicio = null, DateTime? fechaFin = null, int? idSede = null);
+        List<GetEntradasDto> ObtenerEntradasPorArticulo(int? idArticulo, DateTime? fechaInicio, DateTime? fechaFin, int? idSede = null);
+        List<GetEntradasDto> ObtenerEntradasPorMovimiento(int? idMovimiento, DateTime? fechaInicio, DateTime? fechaFin, int? idSede = null);
+        List<GetEntradasDto> ObtenerEntradasFiltradas(DateTime? fechaInicio, DateTime? fechaFin, int? folioInicio, int? folioFin, int? idProveedor, int? idArticulo, int? idSede);
+        List<GetEntradasDto> ObtenerEntradasPorProveedorYArticulo(int? idSede, int? idProveedor, DateTime? fechaInicio, DateTime? fechaFin, int? folioInicio, int? folioFin);
     }
 }

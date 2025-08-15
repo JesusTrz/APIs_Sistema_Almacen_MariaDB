@@ -330,5 +330,274 @@ namespace Sistema_Almacen_MariaDB.Service
         }
 
         #endregion
+
+        #region OBTENER SALIDA #1 
+        public List<GetSalidasDto> ObtenerSalidas(
+     int? idSalida,
+     DateTime? fechaInicio,
+     DateTime? fechaFin,
+     int? idSede = null) // 👈 Nuevo parámetro
+        {
+            var sql = @"
+SELECT  
+    s.ID_Salida, s.Fecha, s.Hora, s.ID_Movimiento, s.ID_CenCost, s.ID_Unidad, s.ID_Personal, s.Comentarios, s.ID_Sede,
+    m.Nombre_Movimiento, m.Descripcion_Movimiento,
+    cc.Nombre_CenCost,
+    u.Numero_Placa,
+    p.Nombre,
+    d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+    a.Nombre_Articulo, um.Nombre_Unidad
+FROM Salidas s
+INNER JOIN Movimientos m ON s.ID_Movimiento = m.ID_Movimiento
+INNER JOIN centro_costo cc ON s.ID_CenCost = cc.ID_CenCost
+INNER JOIN Unidades u ON s.ID_Unidad = u.ID_Unidad
+INNER JOIN Personal p ON s.ID_Personal = p.ID_Personal
+INNER JOIN Detalle_Salida d ON s.ID_Salida = d.ID_Salida
+INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+WHERE (@IdSalida IS NULL OR s.ID_Salida = @IdSalida)
+  AND (@FechaInicio IS NULL OR s.Fecha >= @FechaInicio)
+  AND (@FechaFin IS NULL OR s.Fecha <= @FechaFin)
+  AND (@IdSede IS NULL OR s.ID_Sede = @IdSede) -- 👈 Filtro por sede
+ORDER BY s.Fecha DESC;";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@IdSalida", idSalida);
+            parametros.Add("@FechaInicio", fechaInicio);
+            parametros.Add("@FechaFin", fechaFin);
+            parametros.Add("@IdSede", idSede);
+
+            var salidasDict = new Dictionary<int, GetSalidasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetSalidasDto, GetDetalleSalidasDto, GetSalidasDto>(
+                    sql,
+                    (salida, detalle) =>
+                    {
+                        if (!salidasDict.TryGetValue(salida.ID_Salida, out var salidaExistente))
+                        {
+                            salida.Detalles = new List<GetDetalleSalidasDto>();
+                            salidasDict.Add(salida.ID_Salida, salida);
+                            salidaExistente = salida;
+                        }
+
+                        salidaExistente.Detalles.Add(detalle);
+                        return salidaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return salidasDict.Values.ToList();
+        }
+
+
+        #endregion
+
+        #region SALIDAS FILTRADAS #2
+        public List<GetSalidasDto> ObtenerSalidasFiltradas(
+     DateTime? fechaInicio,
+     DateTime? fechaFin,
+     int? folioInicio,
+     int? folioFin,
+     int? idCentroCosto,
+     int? idUnidad,
+     int? idArticulo,
+     int? idSede // Nuevo parámetro
+ )
+        {
+            var sql = @"
+    SELECT s.ID_Salida, s.Fecha, s.Hora, s.ID_Movimiento, m.Nombre_Movimiento, m.Descripcion_Movimiento,
+           s.ID_CenCost, cc.Nombre_CenCost, s.ID_Unidad, u.Numero_Placa,
+           s.ID_Personal, p.Nombre, s.Comentarios,
+           s.ID_Sede,
+           ds.ID_Articulo, a.Nombre_Articulo, um.Nombre_Unidad,
+           ds.Cantidad, ds.Precio_Unitario, ds.Total
+    FROM Salidas s
+    INNER JOIN Movimientos m ON s.ID_Movimiento = m.ID_Movimiento
+    INNER JOIN centro_costo cc ON s.ID_CenCost = cc.ID_CenCost
+    INNER JOIN Unidades u ON s.ID_Unidad = u.ID_Unidad
+    INNER JOIN Personal p ON s.ID_Personal = p.ID_Personal
+    INNER JOIN Detalle_Salida ds ON s.ID_Salida = ds.ID_Salida
+    INNER JOIN Articulo a ON ds.ID_Articulo = a.ID_Articulo
+    INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+    WHERE (@fechaInicio IS NULL OR s.Fecha >= @fechaInicio)
+      AND (@fechaFin IS NULL OR s.Fecha <= @fechaFin)
+      AND (@folioInicio IS NULL OR s.ID_Salida >= @folioInicio)
+      AND (@folioFin IS NULL OR s.ID_Salida <= @folioFin)
+      AND (@idCentroCosto IS NULL OR s.ID_CenCost = @idCentroCosto)
+      AND (@idUnidad IS NULL OR s.ID_Unidad = @idUnidad)
+      AND (@idArticulo IS NULL OR ds.ID_Articulo = @idArticulo)
+      AND (@idSede IS NULL OR s.ID_Sede = @idSede) -- Filtro por sede
+    ORDER BY s.ID_Salida ASC";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@fechaInicio", fechaInicio);
+            parametros.Add("@fechaFin", fechaFin);
+            parametros.Add("@folioInicio", folioInicio);
+            parametros.Add("@folioFin", folioFin);
+            parametros.Add("@idCentroCosto", idCentroCosto);
+            parametros.Add("@idUnidad", idUnidad);
+            parametros.Add("@idArticulo", idArticulo);
+            parametros.Add("@idSede", idSede); // Pasar parámetro
+
+            var salidasDict = new Dictionary<int, GetSalidasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetSalidasDto, GetDetalleSalidasDto, GetSalidasDto>(
+                    sql,
+                    (salida, detalle) =>
+                    {
+                        if (!salidasDict.TryGetValue(salida.ID_Salida, out var salidaExistente))
+                        {
+                            salida.Detalles = new List<GetDetalleSalidasDto>();
+                            salidasDict.Add(salida.ID_Salida, salida);
+                            salidaExistente = salida;
+                        }
+                        salidaExistente.Detalles.Add(detalle);
+                        return salidaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return salidasDict.Values.ToList();
+        }
+
+        #endregion
+
+        #region SALIDAS POR ARTICULO #3
+        public List<GetSalidasDto> ObtenerSalidasPorArticulo(
+      DateTime? fechaInicio,
+      DateTime? fechaFin,
+      int? idArticulo,
+      int? idSede) // 👈 nuevo parámetro
+        {
+            var sql = @"
+        SELECT 
+            s.ID_Salida, s.Fecha, s.Hora, s.ID_Movimiento, 
+            m.Nombre_Movimiento, m.Descripcion_Movimiento,
+            s.ID_CenCost, cc.Nombre_CenCost, 
+            s.ID_Unidad, u.Numero_Placa,
+            s.ID_Personal, p.Nombre, 
+            s.Comentarios, s.ID_Sede,
+            ds.ID_Articulo, a.Nombre_Articulo, um.Nombre_Unidad,
+            ds.Cantidad, ds.Precio_Unitario, ds.Total
+        FROM Salidas s
+        INNER JOIN Movimientos m ON s.ID_Movimiento = m.ID_Movimiento
+        INNER JOIN centro_costo cc ON s.ID_CenCost = cc.ID_CenCost
+        INNER JOIN Unidades u ON s.ID_Unidad = u.ID_Unidad
+        INNER JOIN Personal p ON s.ID_Personal = p.ID_Personal
+        INNER JOIN Detalle_Salida ds ON s.ID_Salida = ds.ID_Salida
+        INNER JOIN Articulo a ON ds.ID_Articulo = a.ID_Articulo
+        INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+        WHERE (@fechaInicio IS NULL OR s.Fecha >= @fechaInicio)
+          AND (@fechaFin IS NULL OR s.Fecha <= @fechaFin)
+          AND (@idArticulo IS NULL OR ds.ID_Articulo = @idArticulo)
+          AND (@idSede IS NULL OR s.ID_Sede = @idSede) -- 👈 filtro por sede
+        ORDER BY s.ID_Salida ASC;";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@fechaInicio", fechaInicio);
+            parametros.Add("@fechaFin", fechaFin);
+            parametros.Add("@idArticulo", idArticulo);
+            parametros.Add("@idSede", idSede);
+
+            var salidasDict = new Dictionary<int, GetSalidasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetSalidasDto, GetDetalleSalidasDto, GetSalidasDto>(
+                    sql,
+                    (salida, detalle) =>
+                    {
+                        if (!salidasDict.TryGetValue(salida.ID_Salida, out var salidaExistente))
+                        {
+                            salida.Detalles = new List<GetDetalleSalidasDto>();
+                            salidasDict.Add(salida.ID_Salida, salida);
+                            salidaExistente = salida;
+                        }
+
+                        salidaExistente.Detalles.Add(detalle);
+                        return salidaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return salidasDict.Values.ToList();
+        }
+
+        #endregion
+
+        #region SALIDAS POR MOVIMIENTO #4
+        public List<GetSalidasDto> ObtenerSalidasPorMovimiento(
+     DateTime? fechaInicio,
+     DateTime? fechaFin,
+     int? idMovimiento,
+     int? idSede) // 👈 nuevo parámetro
+        {
+            var sql = @"
+        SELECT 
+            s.ID_Salida, s.Fecha, s.Hora, s.ID_Movimiento, 
+            m.Nombre_Movimiento, m.Descripcion_Movimiento,
+            s.ID_CenCost, cc.Nombre_CenCost, 
+            s.ID_Unidad, u.Numero_Placa,
+            s.ID_Personal, p.Nombre, 
+            s.Comentarios,
+            s.ID_Sede,
+            ds.ID_Articulo, a.Nombre_Articulo, um.Nombre_Unidad,
+            ds.Cantidad, ds.Precio_Unitario, ds.Total
+        FROM Salidas s
+        INNER JOIN Movimientos m ON s.ID_Movimiento = m.ID_Movimiento
+        INNER JOIN centro_costo cc ON s.ID_CenCost = cc.ID_CenCost
+        INNER JOIN Unidades u ON s.ID_Unidad = u.ID_Unidad
+        INNER JOIN Personal p ON s.ID_Personal = p.ID_Personal
+        INNER JOIN Detalle_Salida ds ON s.ID_Salida = ds.ID_Salida
+        INNER JOIN Articulo a ON ds.ID_Articulo = a.ID_Articulo
+        INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+        WHERE (@fechaInicio IS NULL OR s.Fecha >= @fechaInicio)
+          AND (@fechaFin IS NULL OR s.Fecha <= @fechaFin)
+          AND (@idMovimiento IS NULL OR s.ID_Movimiento = @idMovimiento)
+          AND (@idSede IS NULL OR s.ID_Sede = @idSede) -- 👈 filtro por sede
+        ORDER BY m.Nombre_Movimiento, s.ID_Salida ASC;";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@fechaInicio", fechaInicio);
+            parametros.Add("@fechaFin", fechaFin);
+            parametros.Add("@idMovimiento", idMovimiento);
+            parametros.Add("@idSede", idSede);
+
+            var salidasDict = new Dictionary<int, GetSalidasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetSalidasDto, GetDetalleSalidasDto, GetSalidasDto>(
+                    sql,
+                    (salida, detalle) =>
+                    {
+                        if (!salidasDict.TryGetValue(salida.ID_Salida, out var salidaExistente))
+                        {
+                            salida.Detalles = new List<GetDetalleSalidasDto>();
+                            salidasDict.Add(salida.ID_Salida, salida);
+                            salidaExistente = salida;
+                        }
+                        salidaExistente.Detalles.Add(detalle);
+                        return salidaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return salidasDict.Values.ToList();
+        }
+
+        #endregion
     }
 }

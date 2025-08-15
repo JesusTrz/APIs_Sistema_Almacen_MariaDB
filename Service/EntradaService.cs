@@ -329,6 +329,453 @@ namespace Sistema_Almacen_MariaDB.Service
         }
         #endregion
 
+        //-------------------------------REPORTES-----------------------------------\\
+
+        #region OBTENER ENTRADAS POR ID  #1
+        public GetEntradasDto ObtenerEntradaPorId(int idEntrada, int idSede)
+        {
+            var sql = @"
+    SELECT  
+        e.ID_Entradas, e.ID_Sede, e.Fecha, e.Hora, e.ID_Movimiento, e.ID_Proveedores, e.Comentarios,
+        m.Nombre_Movimiento, m.Descripcion_Movimiento,
+        p.Razon_Social,
+        d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+        a.Nombre_Articulo, u.Nombre_Unidad,
+        s.Nombre_Sede
+    FROM Entradas e
+    INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+    INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+    INNER JOIN Detalle_Entrada d ON e.ID_Entradas = d.ID_Entradas
+    INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+    INNER JOIN Unidades_Medida u ON a.ID_Medida = u.ID_Medida
+    INNER JOIN sedes s ON e.ID_Sede = s.ID_Sede
+    WHERE e.ID_Entradas = @ID_Entradas AND e.ID_Sede = @ID_Sede";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@ID_Entradas", idEntrada);
+            parametros.Add("@ID_Sede", idSede);
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.FirstOrDefault();
+        }
+
+        #endregion
+
+        #region ObtenerEntradasFiltradas por fechas y sedes #2
+        public List<GetEntradasDto> ObtenerEntradasFiltradas(int? idSede = null, DateTime? fechaInicio = null, DateTime? fechaFin = null)
+        {
+            var sql = @"
+        SELECT  
+            e.ID_Entradas, e.ID_Sede, e.Fecha, e.Hora, e.ID_Movimiento, e.ID_Proveedores, e.Comentarios,
+            m.Nombre_Movimiento, m.Descripcion_Movimiento,
+            p.Razon_Social,
+            d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+            a.Nombre_Articulo, u.Nombre_Unidad
+        FROM Entradas e
+        INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+        INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+        INNER JOIN Detalle_Entrada d ON e.ID_Entradas = d.ID_Entradas
+        INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+        INNER JOIN Unidades_Medida u ON a.ID_Medida = u.ID_Medida
+        WHERE 1=1 ";
+
+            var parametros = new DynamicParameters();
+
+            if (idSede.HasValue)
+            {
+                sql += " AND e.ID_Sede = @ID_Sede";
+                parametros.Add("@ID_Sede", idSede.Value);
+            }
+
+            if (fechaInicio.HasValue)
+            {
+                sql += " AND e.Fecha >= @FechaInicio";
+                parametros.Add("@FechaInicio", fechaInicio.Value);
+            }
+
+            if (fechaFin.HasValue)
+            {
+                sql += " AND e.Fecha <= @FechaFin";
+                parametros.Add("@FechaFin", fechaFin.Value);
+            }
+
+            sql += " ORDER BY e.Fecha DESC, e.Hora DESC";
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                var lista = connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+        #endregion
+        ////////////////////////
+
+        #region ObtenerEntradasPorProveedor #3
+        public List<GetEntradasDto> ObtenerEntradasPorProveedor(
+      int idProveedor,
+      DateTime? fechaInicio = null,
+      DateTime? fechaFin = null,
+      int? idSede = null) // 👈 nuevo parámetro aquí
+        {
+            var sql = @"
+    SELECT 
+        e.ID_Entradas, e.Fecha, e.Hora, e.ID_Movimiento, e.ID_Proveedores, e.Comentarios,
+        m.Nombre_Movimiento, m.Descripcion_Movimiento,
+        p.Razon_Social,
+        d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+        a.Nombre_Articulo, u.Nombre_Unidad
+    FROM Entradas e
+    INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+    INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+    INNER JOIN Detalle_Entrada d ON e.ID_Entradas = d.ID_Entradas
+    INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+    INNER JOIN Unidades_Medida u ON a.ID_Medida = u.ID_Medida
+    WHERE e.ID_Proveedores = @ID_Proveedor";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@ID_Proveedor", idProveedor);
+
+            if (idSede.HasValue)
+            {
+                sql += " AND e.ID_Sede = @ID_Sede"; // 👈 filtro por sede
+                parametros.Add("@ID_Sede", idSede.Value);
+            }
+
+            if (fechaInicio.HasValue)
+            {
+                sql += " AND e.Fecha >= @FechaInicio";
+                parametros.Add("@FechaInicio", fechaInicio.Value);
+            }
+
+            if (fechaFin.HasValue)
+            {
+                sql += " AND e.Fecha <= @FechaFin";
+                parametros.Add("@FechaFin", fechaFin.Value);
+            }
+
+            sql += " ORDER BY e.Fecha DESC, e.Hora DESC";
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+        #endregion
+
+        #region ObtenerEntradasPorArticulo #4
+        public List<GetEntradasDto> ObtenerEntradasPorArticulo(
+       int? idArticulo,
+       DateTime? fechaInicio,
+       DateTime? fechaFin,
+       int? idSede = null) // 👈 nuevo parámetro aquí
+        {
+            var sql = @"
+SELECT  
+    e.ID_Entradas, e.ID_Sede, e.Fecha, e.Hora, e.ID_Movimiento, e.ID_Proveedores, e.Comentarios,
+    m.Nombre_Movimiento, m.Descripcion_Movimiento,
+    p.Razon_Social,
+    d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+    a.Nombre_Articulo, u.Nombre_Unidad
+FROM Entradas e
+INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+INNER JOIN Detalle_Entrada d ON e.ID_Entradas = d.ID_Entradas
+INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+INNER JOIN Unidades_Medida u ON a.ID_Medida = u.ID_Medida
+WHERE (@IdArticulo IS NULL OR d.ID_Articulo = @IdArticulo)
+  AND (@FechaInicio IS NULL OR e.Fecha >= @FechaInicio)
+  AND (@FechaFin IS NULL OR e.Fecha <= @FechaFin)
+  AND (@IdSede IS NULL OR e.ID_Sede = @IdSede) -- 👈 filtro por sede
+ORDER BY a.Nombre_Articulo, e.Fecha;";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@IdArticulo", idArticulo);
+            parametros.Add("@FechaInicio", fechaInicio);
+            parametros.Add("@FechaFin", fechaFin);
+            parametros.Add("@IdSede", idSede);
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+
+        #endregion
+
+        #region OBTENER ENTRADAS POR MOVIMIENTO #5
+        public List<GetEntradasDto> ObtenerEntradasPorMovimiento(
+         int? idMovimiento,
+         DateTime? fechaInicio,
+         DateTime? fechaFin,
+         int? idSede = null)
+        {
+            var sql = @"
+SELECT  
+    e.ID_Entradas, e.ID_Sede, e.Fecha, e.Hora, e.ID_Movimiento, e.ID_Proveedores, e.Comentarios,
+    m.Nombre_Movimiento, m.Descripcion_Movimiento,
+    p.Razon_Social,
+    d.ID_Articulo, d.Cantidad, d.Precio_Unitario, d.Total,
+    a.Nombre_Articulo, u.Nombre_Unidad
+FROM Entradas e
+INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+INNER JOIN Detalle_Entrada d ON e.ID_Entradas = d.ID_Entradas
+INNER JOIN Articulo a ON d.ID_Articulo = a.ID_Articulo
+INNER JOIN Unidades_Medida u ON a.ID_Medida = u.ID_Medida
+WHERE (@IdMovimiento IS NULL OR e.ID_Movimiento = @IdMovimiento)
+  AND (@FechaInicio IS NULL OR e.Fecha >= @FechaInicio)
+  AND (@FechaFin IS NULL OR e.Fecha <= @FechaFin)
+  AND (@IdSede IS NULL OR e.ID_Sede = @IdSede) -- 👈 Filtro por sede
+ORDER BY m.Nombre_Movimiento, e.Fecha;";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@IdMovimiento", idMovimiento);
+            parametros.Add("@FechaInicio", fechaInicio);
+            parametros.Add("@FechaFin", fechaFin);
+            parametros.Add("@IdSede", idSede);
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+        #endregion
+
+        public List<GetEntradasDto> ObtenerEntradasFiltradas(
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    int? folioInicio,
+    int? folioFin,
+    int? idProveedor,
+    int? idArticulo,
+    int? idSede
+)
+        {
+            var sql = @"
+        SELECT e.ID_Entradas, e.Fecha, e.Hora, e.Comentarios,
+               e.ID_Proveedores, pr.Razon_Social,
+               e.ID_Movimiento, m.Nombre_Movimiento, m.Descripcion_Movimiento,
+               e.ID_Sede,
+               de.ID_Articulo, a.Nombre_Articulo, um.Nombre_Unidad,
+               de.Cantidad, de.Precio_Unitario, de.Total
+        FROM Entradas e
+        INNER JOIN Proveedores pr ON e.ID_Proveedores = pr.ID_Proveedores
+        INNER JOIN Movimientos m ON e.ID_Movimiento = m.ID_Movimiento
+        INNER JOIN Detalle_Entrada de ON e.ID_Entradas = de.ID_Entradas
+        INNER JOIN Articulo a ON de.ID_Articulo = a.ID_Articulo
+        INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+        WHERE (@fechaInicio IS NULL OR e.Fecha >= @fechaInicio)
+          AND (@fechaFin IS NULL OR e.Fecha <= @fechaFin)
+          AND (@folioInicio IS NULL OR e.ID_Entradas >= @folioInicio)
+          AND (@folioFin IS NULL OR e.ID_Entradas <= @folioFin)
+          AND (@idProveedor IS NULL OR e.ID_Proveedores = @idProveedor)
+          AND (@idArticulo IS NULL OR de.ID_Articulo = @idArticulo)
+          AND (@idSede IS NULL OR e.ID_Sede = @idSede)
+        ORDER BY e.ID_Entradas ASC";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@fechaInicio", fechaInicio);
+            parametros.Add("@fechaFin", fechaFin);
+            parametros.Add("@folioInicio", folioInicio);
+            parametros.Add("@folioFin", folioFin);
+            parametros.Add("@idProveedor", idProveedor);
+            parametros.Add("@idArticulo", idArticulo);
+            parametros.Add("@idSede", idSede);
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+        #region Reporte de proveedores por Articulos
+        public List<GetEntradasDto> ObtenerEntradasPorProveedorYArticulo(
+    int? idSede,
+    int? idProveedor,
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    int? folioInicio,
+    int? folioFin)
+        {
+            var sql = @"
+        SELECT e.ID_Entradas, e.Fecha, e.Hora, e.Comentarios,
+               e.ID_Proveedores, p.Razon_Social,
+               e.ID_Sede,
+               de.ID_Articulo, a.Nombre_Articulo, um.Nombre_Unidad,
+               de.Cantidad, de.Precio_Unitario, de.Total
+        FROM Entradas e
+        INNER JOIN Proveedores p ON e.ID_Proveedores = p.ID_Proveedores
+        INNER JOIN detalle_entrada de ON e.ID_Entradas = de.ID_Entradas
+        INNER JOIN Articulo a ON de.ID_Articulo = a.ID_Articulo
+        INNER JOIN Unidades_Medida um ON a.ID_Medida = um.ID_Medida
+        WHERE (@idSede IS NULL OR e.ID_Sede = @idSede)
+          AND (@idProveedor IS NULL OR e.ID_Proveedores = @idProveedor)
+          AND (@fechaInicio IS NULL OR e.Fecha >= @fechaInicio)
+          AND (@fechaFin IS NULL OR e.Fecha <= @fechaFin)
+          AND (@folioInicio IS NULL OR e.ID_Entradas >= @folioInicio)
+          AND (@folioFin IS NULL OR e.ID_Entradas <= @folioFin)
+        ORDER BY e.Fecha ASC, e.ID_Entradas ASC
+    ";
+
+            var parametros = new DynamicParameters();
+            parametros.Add("@idSede", idSede);
+            parametros.Add("@idProveedor", idProveedor);
+            parametros.Add("@fechaInicio", fechaInicio);
+            parametros.Add("@fechaFin", fechaFin);
+            parametros.Add("@folioInicio", folioInicio);
+            parametros.Add("@folioFin", folioFin);
+
+            var entradasDict = new Dictionary<int, GetEntradasDto>();
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                connection.Query<GetEntradasDto, GetDetallesEntradasDto, GetEntradasDto>(
+                    sql,
+                    (entrada, detalle) =>
+                    {
+                        if (!entradasDict.TryGetValue(entrada.ID_Entradas, out var entradaExistente))
+                        {
+                            entrada.Detalles = new List<GetDetallesEntradasDto>();
+                            entradasDict.Add(entrada.ID_Entradas, entrada);
+                            entradaExistente = entrada;
+                        }
+                        entradaExistente.Detalles.Add(detalle);
+                        return entradaExistente;
+                    },
+                    parametros,
+                    splitOn: "ID_Articulo"
+                );
+            }
+
+            return entradasDict.Values.ToList();
+        }
+
+
+        #endregion
 
     }
 }

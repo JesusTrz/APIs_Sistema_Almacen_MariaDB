@@ -403,5 +403,43 @@ namespace Sistema_Almacen_MariaDB.Service
         }
         #endregion
 
+        #region 
+        public List<InventarioArticulos> ObtenerInventarioPorSede(int idSede)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = @"
+            SELECT 
+                a.ID_Articulo,
+                a.Nombre_Articulo,
+                a.Descripcion_Articulo,
+                a.ID_Medida,
+                m.Nombre_Unidad,
+                a.Numero_Parte,
+                i.Ubicacion,
+                i.Stock_Actual,
+                i.Stock_Minimo,
+                i.Stock_Maximo,
+                i.Costo_Promedio,
+                i.Saldo,
+                i.Ultimo_Costo,
+                i.Ultima_Compra,
+                l.ID_Linea,
+                l.Nombre_Linea
+            FROM inventario i
+            INNER JOIN articulo a ON i.ID_Articulo = a.ID_Articulo
+            LEFT JOIN unidades_medida m ON a.ID_Medida = m.ID_Medida
+            LEFT JOIN linea l ON a.ID_Linea = l.ID_Linea
+            WHERE i.ID_Sede = @ID_Sede
+        ";
+
+                return connection.Query<InventarioArticulos>(query, new { ID_Sede = idSede }).ToList();
+            }
+        }
+
+
+
+        #endregion
+
     }
 }

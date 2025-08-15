@@ -29,15 +29,17 @@ namespace Sistema_Almacen_MariaDB.Service
             using (var connection = new MySqlConnection(_connectionString))
             {
                 string query = @"
-            SELECT 
-                u.ID_Usuario, 
-                u.Nombre_Usuario, 
-                u.Contrasenia, 
-                u.ID_Roles, 
-                u.ID_Sede,
-                r.Nombre_Rol
-            FROM Usuarios u
-            JOIN Roles r ON u.ID_Roles = r.ID_Roles";
+        SELECT 
+            u.ID_Usuario, 
+            u.Nombre_Usuario, 
+            u.Contrasenia, 
+            u.ID_Roles, 
+            u.ID_Sede,
+            r.Nombre_Rol,
+            s.Nombre_Sede
+        FROM Usuarios u
+        JOIN Roles r ON u.ID_Roles = r.ID_Roles
+        JOIN Sedes s ON u.ID_Sede = s.ID_Sede";
 
                 return connection.Query<UsuariosDto>(query).ToList();
             }
@@ -50,16 +52,18 @@ namespace Sistema_Almacen_MariaDB.Service
             using (var connection = new MySqlConnection(_connectionString))
             {
                 string query = @"
-            SELECT 
-                u.ID_Usuario, 
-                u.Nombre_Usuario, 
-                u.Contrasenia, 
-                u.ID_Roles, 
-                u.ID_Sede,
-                r.Nombre_Rol
-            FROM Usuarios u
-            JOIN Roles r ON u.ID_Roles = r.ID_Roles
-            WHERE u.ID_Sede = @ID_Sede";
+        SELECT 
+            u.ID_Usuario, 
+            u.Nombre_Usuario, 
+            u.Contrasenia, 
+            u.ID_Roles, 
+            u.ID_Sede,
+            r.Nombre_Rol,
+            s.Nombre_Sede
+        FROM Usuarios u
+        JOIN Roles r ON u.ID_Roles = r.ID_Roles
+        JOIN Sedes s ON u.ID_Sede = s.ID_Sede
+        WHERE u.ID_Sede = @ID_Sede";
 
                 return connection.Query<UsuariosDto>(query, new { ID_Sede = idSede }).ToList();
             }
@@ -71,7 +75,20 @@ namespace Sistema_Almacen_MariaDB.Service
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                string query = "SELECT Nombre_Usuario FROM Usuarios WHERE ID_Usuario = @ID_Usuario";
+                string query = @"
+        SELECT 
+            u.ID_Usuario, 
+            u.Nombre_Usuario, 
+            u.Contrasenia, 
+            u.ID_Roles, 
+            u.ID_Sede,
+            r.Nombre_Rol,
+            s.Nombre_Sede
+        FROM Usuarios u
+        JOIN Roles r ON u.ID_Roles = r.ID_Roles
+        JOIN Sedes s ON u.ID_Sede = s.ID_Sede
+        WHERE u.ID_Usuario = @ID_Usuario";
+
                 return connection.QueryFirstOrDefault<UsuariosDto>(query, new { ID_Usuario = id });
             }
         }
@@ -103,6 +120,35 @@ namespace Sistema_Almacen_MariaDB.Service
                 connection.Execute(query, new 
                 { 
                     Nombre_Usuario = users.Nombre_Usuario, 
+                    Contrasenia = passwordHasheada,
+                    ID_Roles = users.ID_Roles,
+                    ID_Sede = users.ID_Sede
+                });
+            }
+        }
+
+        public void CrearUsuariosGeneral(UsuariosDatos users)
+        {
+            if (!ContraseniaValida(users.Contrasenia))
+                throw new Exception("La contraseña no cumple con los requisitos mínimos.");
+
+            if (!RolExiste(users.ID_Roles))
+                throw new Exception("El Rol Seleccionado no Existe.");
+
+            if (!SedeExiste(users.ID_Sede))
+                throw new Exception("La Sede Seleccionada no Existe.");
+
+            if (UsuarioExiste(users.Nombre_Usuario))
+                throw new Exception("El Nombre de Usuario ya Existe!");
+
+            string passwordHasheada = HashPassword(users.Contrasenia);
+
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                string query = "INSERT INTO Usuarios (Nombre_Usuario, Contrasenia, ID_Roles, ID_Sede) VALUES (@Nombre_Usuario, @Contrasenia, @ID_Roles, @ID_Sede)";
+                connection.Execute(query, new
+                {
+                    Nombre_Usuario = users.Nombre_Usuario,
                     Contrasenia = passwordHasheada,
                     ID_Roles = users.ID_Roles,
                     ID_Sede = users.ID_Sede

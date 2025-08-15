@@ -19,6 +19,8 @@ namespace Sistema_Almacen_MariaDB.Models
         public Nullable<int> ID_Roles { get; set; }
         public string Nombre_Rol { get; set; }
         public Nullable<int> ID_Sede { get; set; }
+
+        public string Nombre_Sede { get; set; }
     }
     public class UsuariosDatos
     {

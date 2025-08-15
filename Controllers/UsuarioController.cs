@@ -103,6 +103,46 @@ namespace Sistema_Almacen_MariaDB.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("api/create/usuarios/general")]
+
+        public IHttpActionResult CrearUsuariosGeneral(UsuariosDatos users)
+        {
+            if(users == null)
+            {
+                return BadRequest("No pueden haber datos vacios!");
+            }
+
+            if (string.IsNullOrWhiteSpace(users.Nombre_Usuario))
+            {
+                return BadRequest("El Nombre de usuario es obligatorio!");
+            }
+
+            if (string.IsNullOrWhiteSpace(users.Contrasenia))
+            {
+                return BadRequest("La contraseña de usuario es obligatoria!");
+            }
+
+            if (users.ID_Roles == null)
+            {
+                return BadRequest("Debes seleccionar un rol valido!");
+            }
+
+            if (users.ID_Sede == null)
+            {
+                return BadRequest("Debes seleccionar una sede valida!");
+            }
+
+            try
+            {
+                _usuariosService.CrearUsuariosGeneral(users);
+                return Ok("Usuario Creado Correctamente");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         #endregion
 
         #region Eliminar Usuarios

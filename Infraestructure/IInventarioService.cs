@@ -16,6 +16,7 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
         void EliminarArticulodeInventario(int id);
         bool EliminarTodosArticulosInventario(int idSede);
         List<InventarioArticulos> GetInventarioPorSede(int idSede);
+        List<InventarioArticulos> ObtenerInventarioPorSede(int idSede);
         bool ReiniciarCostoSaldo(int idSede);
         bool ReiniciarInventario(int idSede);
         bool ReiniciarInventarioPorSede(int idSede);

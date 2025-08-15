@@ -32,7 +32,7 @@ namespace Sistema_Almacen_MariaDB
                         // hold additional metadata for an API. Version and title are required but you can also provide
                         // additional fields by chaining methods off SingleApiVersion.
                         //
-                        c.SingleApiVersion("v1", "Sistema_Almacen_MariaDB");
+                        c.SingleApiVersion("v1", "API'S Del Sistema de Almacén 2025 Sociedad Cooperativa de Servicios Juaréz S.C.L.");
 
                         // If you want the output Swagger docs to be indented properly, enable the "PrettyPrint" option.
                         //

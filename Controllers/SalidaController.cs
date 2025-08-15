@@ -73,7 +73,7 @@ namespace Sistema_Almacen_MariaDB.Controllers
         }
 
         [HttpDelete]
-        [Route("api/salidas/ delete/eliminar-articulo")]
+        [Route("api/salidas/delete/eliminar-articulo")]
 
         public IHttpActionResult EliminarArticulosSalidas(int idSalida, int idArticulo)
         {
