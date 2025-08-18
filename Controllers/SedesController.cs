@@ -60,19 +60,53 @@ namespace Sistema_Almacen_MariaDB.Controllers
         [HttpPost]
         [Route("api/create/sedes")]
 
-        public IHttpActionResult CrearSede(NombreSedeDto sede, int idUsuarioActual)
+        public IHttpActionResult CrearSede(NombreSedeDto sede)
         {
             if (sede == null || string.IsNullOrWhiteSpace(sede.Nombre_Sede))
                 return BadRequest("El Nombre de la Sede es Obligatorio.");
 
             try
             {
-                _sedesService.CrearSede(sede, idUsuarioActual);
+                _sedesService.CrearSede(sede);
                 return Ok("Sede Creada con Exito!");
             }
             catch (Exception ex)
             {
                 return InternalServerError(ex);
+            }
+        }
+        #endregion
+
+        #region Editar Nombre de Usuario
+        [HttpPut]
+        [Route("actualizar")]
+        public IHttpActionResult ActualizarSede(int idSede, string nuevoNombre)
+        {
+            try
+            {
+                _sedesService.ActualizarSede(idSede, nuevoNombre);
+                return Ok("Sede actualizada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        #endregion
+
+        #region Eliminar SEDE
+        [HttpDelete]
+        [Route("eliminar")]
+        public IHttpActionResult EliminarSede(int idSede)
+        {
+            try
+            {
+                _sedesService.EliminarSede(idSede);
+                return Ok("Sede eliminada correctamente junto con todos sus datos relacionados.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         } 
         #endregion

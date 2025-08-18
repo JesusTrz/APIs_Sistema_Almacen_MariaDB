@@ -9,7 +9,9 @@ namespace Sistema_Almacen_MariaDB.Infraestructure
 {
     public interface ISedesService
     {
-        void CrearSede(NombreSedeDto sede, int idUsuarioActual);
+        void ActualizarSede(int idSede, string nuevoNombre);
+        void CrearSede(NombreSedeDto sede);
+        void EliminarSede(int idSede);
         List<SedesDto> GetAllSedes();
         SedesDto GetSedeById(int id);
     }
